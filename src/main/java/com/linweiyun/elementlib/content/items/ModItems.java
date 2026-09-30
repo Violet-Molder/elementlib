@@ -6,13 +6,10 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EquipmentSlotGroup;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.Tiers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -25,29 +22,6 @@ import java.util.List;
  * 示范物品注册 —— {@code items.toml} 的 {@code register-demo-items} 关闭时不注册任何内容。
  */
 public final class ModItems {
-
-    /** 元素剑的攻击力与攻速基线。 */
-    private static final float SWORD_ATTACK_DAMAGE = 3.0F;
-    private static final float SWORD_ATTACK_SPEED = -2.4F;
-
-    /** 原版剑攻速/攻速基准 modifier 的固定 id（与原版 SwordItem 一致）。 */
-    private static final ResourceLocation BASE_ATTACK_DAMAGE_ID =
-            ResourceLocation.withDefaultNamespace("generic.attack_damage");
-    private static final ResourceLocation BASE_ATTACK_SPEED_ID =
-            ResourceLocation.withDefaultNamespace("generic.attack_speed");
-
-    /** 元素剑的基础属性：攻击伤害 + 攻速（等效原版铁剑）。 */
-    private static final ItemAttributeModifiers SWORD_ATTRIBUTES =
-            ItemAttributeModifiers.builder()
-                    .add(Attributes.ATTACK_DAMAGE,
-                            new AttributeModifier(BASE_ATTACK_DAMAGE_ID, SWORD_ATTACK_DAMAGE,
-                                    AttributeModifier.Operation.ADD_VALUE),
-                            EquipmentSlotGroup.MAINHAND)
-                    .add(Attributes.ATTACK_SPEED,
-                            new AttributeModifier(BASE_ATTACK_SPEED_ID, SWORD_ATTACK_SPEED,
-                                    AttributeModifier.Operation.ADD_VALUE),
-                            EquipmentSlotGroup.MAINHAND)
-                    .build();
 
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ElementLib.MOD_ID);
 
@@ -120,8 +94,7 @@ public final class ModItems {
     private static DeferredItem<ElementSwordItem> sword(String elementPath) {
         return ITEMS.registerItem(
                 elementPath + "_sword",
-                props -> new ElementSwordItem(props, ElementLib.MOD_ID + ":" + elementPath),
-                new Item.Properties().attributes(SWORD_ATTRIBUTES));
+                props -> new ElementSwordItem(Tiers.IRON, props, ElementLib.MOD_ID + ":" + elementPath));
     }
 
     public static void register(IEventBus modEventBus) {

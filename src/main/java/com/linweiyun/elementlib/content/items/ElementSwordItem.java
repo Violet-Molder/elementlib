@@ -14,31 +14,41 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Item.Properties;
-import net.minecraft.world.item.Item.TooltipContext;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item.TooltipContext;
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 /**
- * 元素剑：命中生物后附着构造时指定的元素；右键方块可把该元素附着到环境上。
+ * 元素剑：命中生物后附着构造时指定的元素；右键用射线检测把元素附着到环境（方块/流体）。
  */
-public class ElementSwordItem extends Item {
+public class ElementSwordItem extends SwordItem {
 
     private final String elementId;
 
     @Nullable
     private final ResourceLocation elementKey;
 
-    public ElementSwordItem(Properties properties, String elementId) {
-        super(properties);
+    public ElementSwordItem(Tier tier, Properties properties, String elementId) {
+        super(tier, properties);
         this.elementId = elementId;
         this.elementKey = ResourceLocation.tryParse(elementId);
     }
@@ -60,32 +70,58 @@ public class ElementSwordItem extends Item {
     }
 
     /**
-     * 右键方块：这个方块肯收下该元素就附着到环境上；不肯收就交回原版处理。
+     * 右键（空手目标不明时/流体）：用射线检测决定附着到哪个目标。
+     * <p>先测实体，再测方块（OUTLINE，挡住时才命中），最后测流体 —— 这样水、岩壁、生物都能被
+     * 一张射线检测覆盖，绕开 {@code useOn} 选不中水的限制。
      *
-     * <p>客户端不做预测，一律返回 {@code PASS} —— 收不收由服务端按方块规则表判定，
-     * 免得客户端吃掉这次点击而服务端其实什么都没附着。
+     * <p>只在服务端执行；里面不做位置预测。
      */
     @Override
-    public InteractionResult useOn(UseOnContext context) {
-        Level level = context.getLevel();
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
         if (level.isClientSide() || !(level instanceof ServerLevel serverLevel)) {
-            return InteractionResult.PASS;
+            return InteractionResultHolder.pass(stack);
         }
         GenshinElement element = element();
         if (element == null) {
-            return InteractionResult.PASS;
+            return InteractionResultHolder.pass(stack);
         }
-        BlockHost host = BlockHost.of(serverLevel, context.getClickedPos());
-        if (host == null) {
-            return InteractionResult.PASS;
+
+        double range = 5.0D;
+        Vec3 eye = player.getEyePosition(1.0F);
+        Vec3 look = player.getViewVector(1.0F);
+        Vec3 end = eye.add(look.multiply(range, range, range));
+
+        // 1) 实体
+        AABB searchBox = player.getBoundingBox().expandTowards(look.multiply(range, range, range)).inflate(1.0D);
+        EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(
+                player, eye, end, searchBox,
+                e -> e instanceof LivingEntity, range * range);
+        if (entityHit != null && entityHit.getEntity() instanceof LivingEntity living) {
+            ResourceLocation itemKey = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            ElementalAttachmentHelper.attach(EntityHost.of(living), element,
+                    AttachmentSource.NORMAL_ATTACK, AttachmentProfile.WEAK,
+                    itemKey == null ? elementId : itemKey.toString(), level.getGameTime());
+            return InteractionResultHolder.sidedSuccess(stack, false);
         }
-        AttachResult result = ElementalAttachmentHelper.attach(host, element,
-                AttachmentSource.ENVIRONMENTAL, AttachmentProfile.WEAK);
-        StatusContainer container = host.container();
-        if (container != null) {
-            host.commit(container);
+
+        // 2) 方块（OUTLINE：只有挡住的方块才命中）
+        BlockHitResult blockHit = level.clip(new ClipContext(
+                eye, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.ANY, player));
+        if (blockHit.getType() != HitResult.Type.MISS) {
+            BlockHost host = BlockHost.of(serverLevel, blockHit.getBlockPos());
+            if (host != null) {
+                AttachResult result = ElementalAttachmentHelper.attach(host, element,
+                        AttachmentSource.ENVIRONMENTAL, AttachmentProfile.WEAK);
+                StatusContainer container = host.container();
+                if (container != null) {
+                    host.commit(container);
+                }
+                return InteractionResultHolder.sidedSuccess(stack, false);
+            }
         }
-        return result.attached() ? InteractionResult.SUCCESS : InteractionResult.PASS;
+
+        return InteractionResultHolder.pass(stack);
     }
 
     /** 显示这把剑对应的元素名；元素未注册时提示。 */
