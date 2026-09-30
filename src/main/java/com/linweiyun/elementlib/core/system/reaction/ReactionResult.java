@@ -1,6 +1,7 @@
 package com.linweiyun.elementlib.core.system.reaction;
 
 import com.linweiyun.elementlib.api.ElementalReactionType;
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -10,15 +11,21 @@ public class ReactionResult {
 
     @Nullable
     private final ElementalReactionType reactionType;
+    @Getter
     private final boolean reacted;
 
+    @Getter
     private final float consumedAttacker;
+    @Getter
     private final float consumedDefender;
 
     /** 后手残留（来自 SPECIAL / SELF_ATTACH 等不遵循「后手不残留」规则的来源）。 */
+    @Getter
     private final float attackerResidual;
 
+    @Getter
     private final boolean isAmplified;
+    @Getter
     private final float amplifyMultiplier;
 
     private ReactionResult(Builder builder) {
@@ -33,12 +40,6 @@ public class ReactionResult {
 
     @Nullable
     public ElementalReactionType getReactionType() { return reactionType; }
-    public boolean isReacted() { return reacted; }
-    public float getConsumedAttacker() { return consumedAttacker; }
-    public float getConsumedDefender() { return consumedDefender; }
-    public float getAttackerResidual() { return attackerResidual; }
-    public boolean isAmplified() { return isAmplified; }
-    public float getAmplifyMultiplier() { return amplifyMultiplier; }
 
     public static Builder builder(@Nullable ElementalReactionType type) {
         return new Builder(type);

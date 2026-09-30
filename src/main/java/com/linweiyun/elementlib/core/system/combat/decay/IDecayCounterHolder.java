@@ -2,8 +2,6 @@ package com.linweiyun.elementlib.core.system.combat.decay;
 
 /**
  * 计时计数器持有者接口。
- *
- * <p>Mod 实体直接实现；原版实体通过元素 Mixin 注入实现。
  */
 public interface IDecayCounterHolder {
 

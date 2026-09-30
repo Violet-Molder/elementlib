@@ -27,14 +27,9 @@ import java.util.function.Supplier;
 
 /**
  * 月感电反应 —— 水 + 雷，注册比 1:1、{@code basePriority = -1}（按默认优先级表排在普通感电之前）。
- *
- * <p>成立时在目标上方生成雷暴云，并立刻结算一次月感电伤害；雷暴云的周期与爆炸伤害由实体自己结算。
- * 变体门不放行或目标处于冻结状态时不成立。
  */
 public class LunarChargedReaction extends ElementalReaction {
     public static final Logger LOGGER = ModLog.getLogger(LogGroup.ELEMENT);
-
-    /** 雷暴云生成高度：目标眼睛上方 2 格。 */
     private static final double CLOUD_HEIGHT_OFFSET = 2.0;
 
     public LunarChargedReaction(Supplier<ElementalReactionType> type,

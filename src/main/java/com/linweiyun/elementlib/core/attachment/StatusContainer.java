@@ -36,15 +36,6 @@ import java.util.function.Predicate;
 
 /**
  * 状态容器 —— 某个宿主身上所有 StatusInstance 的集合
- * <p>
- * 通俗地说：张三身上现在挂着哪些状态的清单。
- * 容器只存、取、tick 实例、清理过期——它完全不理解里面存的是什么。
- * <p>
- * 多态序列化说明：
- * instances 列表的序列化/反序列化由本类手动处理，根据 typeId 从
- * {@link StatusInstanceTypes} 查找正确的子类构造器。添加新 StatusInstance
- * 子类时只需在子类字段上加 @Persisted 注解并调用 StatusInstanceTypes.register，
- * 无需修改本类。
  */
 public class StatusContainer implements IPersistedSerializable {
     public static final Logger LOGGER = ModLog.getLogger(LogGroup.CORE);

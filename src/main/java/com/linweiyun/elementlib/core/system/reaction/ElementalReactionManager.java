@@ -21,10 +21,6 @@ import java.util.List;
 
 /**
  * 元素反应管理器 —— 全静态方法。
- *
- * <p>附着入口调用 {@link #tryReactFor(ElementalHost, ReactionContext)}：收集目标身上的先手元素，
- * 配出「后手元素 + 某个先手元素」能触发的全部反应，按优先级从小到大依次执行，
- * 每轮扣减后手量，直到后手耗尽。反应反馈由本类统一发出。
  */
 public class ElementalReactionManager {
 
@@ -35,14 +31,6 @@ public class ElementalReactionManager {
         return canElementReact(attackerElement, container, null);
     }
 
-    /**
-     * 同 {@link #canElementReact(GenshinElement, StatusContainer)}，但把宿主的筛查也算进去。
-     *
-     * <p>瞬发元素（风 / 岩）只为「触发一次反应」而来：宿主拒绝了它全部候选反应时，
-     * 这次附着就不该发生。
-     *
-     * @param host 目标宿主；{@code null} 表示没有宿主信息，视为允许全部反应
-     */
     public static boolean canElementReact(GenshinElement attackerElement,
                                           StatusContainer container,
                                           @Nullable ElementalHost host) {
@@ -67,12 +55,6 @@ public class ElementalReactionManager {
         return false;
     }
 
-    // ==================== 反应入口 ====================
-
-    /**
-     * 宿主感知的反应入口 —— 任何来源（攻击、环境、自身、反应内二次写入）触发的反应都走这里；
-     * 反应反馈按宿主落在方块位置或实体锚点上。
-     */
     public static ReactionResult tryReactFor(@Nullable ElementalHost host, ReactionContext context) {
         return runReactions(context, reactionType -> {
             if (host == null) {
@@ -88,18 +70,11 @@ public class ElementalReactionManager {
             }
         });
     }
-
-    // ==================== 内部 ====================
-
-    /** 反应反馈出口 —— 实体端与方块端的唯一差异。 */
     @FunctionalInterface
     private interface ReactionIndicator {
         void show(ElementalReactionType reactionType);
     }
 
-    /**
-     * 反应统一执行体 —— 实体端与方块端共用。
-     */
     private static ReactionResult runReactions(ReactionContext context, ReactionIndicator indicator) {
         float remainingAttackerQty = context.attackerUnit();
         List<ElementalAttachmentInstance> defenders = collectDefenders(context);
@@ -130,7 +105,6 @@ public class ElementalReactionManager {
 
             ReactionResult result = cand.reaction.execute(roundContext);
 
-            // 反应实现必须返回结果；null 当作「没发生」。
             if (result == null || !result.isReacted()) continue;
             try {
                 cand.reaction.applyHostEffect(roundContext);
@@ -161,9 +135,6 @@ public class ElementalReactionManager {
                 ReactionResult.builder(null).build();
     }
 
-    /**
-     * 月感电与星体系的字由各自的伤害链出，反应层不发；其余分类照常发。
-     */
     private static boolean shouldShowIndicator(@Nullable ElementalReactionType reactionType) {
         if (reactionType == null) return false;
         ReactionCategory category = reactionType.getCategory();
@@ -194,7 +165,6 @@ public class ElementalReactionManager {
             GenshinElement attackerMain = context.attackerElement().getMainElement();
             for (ElementalReaction reaction : ModRegistries.ELEMENTAL_REACTIONS_REGISTRY) {
                 if (!reaction.canMatch(attackerMain, defenderMain)) continue;
-                // 第二段筛查：宿主收不收这个反应。被拒绝 = 这次不反应、先手元素留在身上。
                 if (!acceptsReaction(context.targetHost(), context.attackerElement(),
                         defender.getElement(), reaction)) {
                     continue;
@@ -210,13 +180,6 @@ public class ElementalReactionManager {
         candidates.sort(Comparator.comparingInt(c -> c.priority));
         return candidates;
     }
-
-    /**
-     * 问宿主「这个反应能不能发生在你身上」，最终落到实体实现的 {@code ElementalAttachable.onReactElement}。
-     *
-     * @param attackerElement 后手（本次附着）元素
-     * @param defenderElement 先手（宿主身上已有）元素
-     */
     private static boolean acceptsReaction(@Nullable ElementalHost host, GenshinElement attackerElement,
                                            GenshinElement defenderElement,
                                            ElementalReaction reaction) {

@@ -4,10 +4,6 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 /**
  * 反应倍率配置 —— 只含已实装反应用到的倍率。
- *
- * <p>增益类反应（融化 / 蒸发）读 {@link #MELT} / {@link #MELT_NEGATIVE} /
- * {@link #VAPORIZE} / {@link #VAPORIZE_NEGATIVE}；剧变类反应（超导 / 感电 / 扩散）
- * 读各自的倍率。
  */
 public final class ReactionConfig {
 

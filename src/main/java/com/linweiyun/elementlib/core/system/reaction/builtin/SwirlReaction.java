@@ -41,12 +41,6 @@ import java.util.function.Supplier;
 
 /**
  * 扩散反应 —— 风 + 可扩散元素（火 / 水 / 雷 / 冰），剧变反应。
- *
- * <p>触发时消耗双方元素，把被扩散的元素按扩散量「再挂」给半径 {@value #SWIRL_RADIUS} 格内的其它实体；
- * 同一目标两次扩散至少隔 {@value #SWIRL_COOLDOWN_TICKS} 刻。
- *
- * <p>变体门放行且扩散元素为冰时走星扩散分支：先结算风元素伤害，再生成星璇（到期爆炸结算冰元素伤害），
- * 不做普通传播。
  */
 public class SwirlReaction extends ElementalReaction {
     public static final Logger LOGGER = ModLog.getLogger(LogGroup.ELEMENT);
@@ -56,11 +50,7 @@ public class SwirlReaction extends ElementalReaction {
 
     private static final int SWIRL_COOLDOWN_TICKS = 20;
     private static final double SWIRL_RADIUS = 5.0;
-
-    /** 星璇周期伤害 = 爆炸伤害的 1/4，与 {@link StellarVortexEntity} 的档位一致。 */
     private static final float STELLAR_VORTEX_TICK_DAMAGE_RATIO = 0.25f;
-
-    /** 键是实体 UUID，有界 LRU 防止静态表随刷怪无限增长。 */
     private static final Map<UUID, Long> lastSwirlTick = BoundedLruMap.create();
 
     private static final String PYRO_ID = ModElements.PYRO.getId().toString();
@@ -79,7 +69,6 @@ public class SwirlReaction extends ElementalReaction {
         super(type, elementAId, elementBId, ratioA, ratioB, basePriority);
     }
 
-    /** 只有「后手风 + 先手可扩散元素」成立。 */
     @Override
     public boolean canMatch(GenshinElement attackerElement, GenshinElement defenderElement) {
         GenshinElement attackerMain = attackerElement.getMainElement();
@@ -92,7 +81,6 @@ public class SwirlReaction extends ElementalReaction {
 
     @Override
     public boolean isBlocked(ReactionContext context) {
-        // 扩散以实体为中心向周围传播，方块端没有实体载体。
         if (context.targetEntity() == null) return true;
         long gameTime = context.targetEntity().level().getGameTime();
         UUID targetId = context.targetEntity().getUUID();
@@ -164,7 +152,6 @@ public class SwirlReaction extends ElementalReaction {
                 .build();
     }
 
-    /** 星扩散：风元素伤害 + 生成星璇（到期爆炸结算冰元素伤害），不做普通传播。 */
     private void handleStellarSwirl(ReactionContext ctx, @Nullable LivingEntity target) {
         if (target == null) return;
         if (!(target.level() instanceof ServerLevel level)) return;
@@ -199,9 +186,6 @@ public class SwirlReaction extends ElementalReaction {
         return key != null && SWIRLABLE_IDS.contains(key.toString());
     }
 
-    /**
-     * 取这次要被扩散的元素：冻在场时优先取藏在冻里的可扩散元素，否则按优先级取第一个有量的。
-     */
     @Nullable
     private GenshinElement findSpreadElement(StatusContainer container) {
         if (ElectroChargedReaction.findElement(container, ModElements.of(ModElements.FROZEN)) != null) {
@@ -225,7 +209,6 @@ public class SwirlReaction extends ElementalReaction {
         return null;
     }
 
-    /** 消耗的风元素量达到 2 时算强扩散，传播量更大。 */
     private static float calculateSpreadQuantity(float consumedAnemoSide) {
         return consumedAnemoSide >= 2.0f ? STRONG_SWIRL_SPREAD : WEAK_SWIRL_SPREAD;
     }
@@ -237,8 +220,6 @@ public class SwirlReaction extends ElementalReaction {
                 target, ElementLibConfig.baseDamage("swirl"));
         ReactionFeedback.transformative(target, type(), spreadElement);
     }
-
-    /** 把被扩散的元素再挂给周围实体；挂上之后的反应由附着入口接着做。 */
     private void spreadToNearby(ReactionContext ctx, GenshinElement spreadElement,
                                 float spreadQuantity, @Nullable LivingEntity target) {
         if (target == null) return;
@@ -258,7 +239,6 @@ public class SwirlReaction extends ElementalReaction {
             if (nearbyContainer == null) continue;
 
             EntityHost nearbyHost = EntityHost.of(nearby);
-            if (nearbyHost == null) continue;
 
             // 拒收这次附着的目标不会跟着反应（与直接攻击同一条规则）。
             ElementalAttachmentHelper.attach(nearbyHost, spreadElement,

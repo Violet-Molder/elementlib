@@ -15,11 +15,6 @@ import java.util.Map;
 
 /**
  * Chunk 级方块元素容器表 —— 每个坐标一个完整的 {@link StatusContainer}。
- *
- * <p><b>为什么存整容器而不是单条实例</b>：方块和生物一样要能同时挂多种元素
- * （水面挂水、被火打挂火…），只存一条冻的话「这个方块身上现在有什么元素」根本答不出来，
- * 规则的覆盖/损耗/反应也就无从复用。存容器后，方块与生物走同一条附着入口
- * （见 {@code core/system/about/host/BlockHost}）。
  */
 public class ChunkBlockElements implements IPersistedSerializable {
 
@@ -50,10 +45,6 @@ public class ChunkBlockElements implements IPersistedSerializable {
 
     /**
      * 上次推进衰减的 gameTime。
-     *
-     * <p>浮冰身上可能挂着多条方块排期（我们每 tick 重排一条 + 原版 {@code onPlace} 的随机
-     * 60–120 tick 一条），多余排期会让某格在同一 tick 里多走一步衰减 —— 这就是
-     * 「一起结的冰不同时化」的来源。每 tick 只推进一次即可消除，与排期条数无关。
      */
     private final Map<Long, Long> lastDecayTicks = new HashMap<>();
 

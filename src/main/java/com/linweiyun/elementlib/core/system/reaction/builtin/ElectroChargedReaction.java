@@ -20,9 +20,6 @@ import java.util.function.Supplier;
 
 /**
  * 感电反应 —— 水 + 雷，共存反应。
- *
- * <p>触发时各消耗水雷 {@value #CONSUME_PER_TRIGGER} 单位，并把目标的感电状态置为激活，
- * 之后的周期伤害由 {@link ElectroChargedTickState} 结算。冻结状态下不触发。
  */
 public class ElectroChargedReaction extends ElementalReaction {
     public static final Logger LOGGER = ModLog.getLogger(LogGroup.ELEMENT);

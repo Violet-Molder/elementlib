@@ -22,29 +22,6 @@ import java.util.stream.StreamSupport;
 
 /**
  * ElementLib 对外门面：附着、消耗、查询，以及伤害处理器 / 变体门 / 图标总闸三个扩展点。
- *
- * <pre>{@code
- * // 给目标挂 1U 火，附着内部会自动尝试反应
- * GenshinElement pyro = ModElements.of(ModElements.PYRO);
- * AttachResult result = ElementLibApi.attach(target, pyro,
- *         AttachmentSource.NORMAL_ATTACK, AttachmentProfile.WEAK);
- * if (result.reacted()) {
- *     float multiplier = result.reaction().getAmplifyMultiplier();   // 融化 / 蒸发的增幅倍率
- * }
- *
- * // 把伤害计算与结算换成自己的管线
- * ElementLibApi.setDamageHandler(new ElementalDamageHandler() {
- *     @Override public float computeDamage(ElementalDamageContext ctx) { return myFormula(ctx); }
- *     @Override public void dealDamage(ElementalDamageContext ctx, float amount) { myPipeline(ctx, amount); }
- * });
- *
- * // 星体系 / 月感电的变体开关换成真实判定
- * ElementLibApi.setVariantGate(new ReactionVariantGate() {
- *     @Override public boolean stellarSwirl(Entity attacker, LivingEntity target) { return myCheck(); }
- *     @Override public boolean stellarConduce(Entity attacker, LivingEntity target) { return false; }
- *     @Override public boolean lunarCharged(Entity attacker, LivingEntity target) { return false; }
- * });
- * }</pre>
  */
 public final class ElementLibApi {
 

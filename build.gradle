@@ -27,8 +27,9 @@ repositories {
 
 dependencies {
     implementation("com.lowdragmc.ldlib2:ldlib2-neoforge-${minecraft_version}:${ldlib2_version}")
-    compileOnly "org.projectlombok:lombok:1.18.38"
-    annotationProcessor "org.projectlombok:lombok:1.18.38"
+    // 1.18.48：原生支持 JDK 25-27，规避老版本在 JDK 25 上借 Unsafe::objectFieldOffset 导致的弃用告警
+    compileOnly "org.projectlombok:lombok:1.18.48"
+    annotationProcessor "org.projectlombok:lombok:1.18.48"
 }
 
 neoForge {
@@ -85,6 +86,10 @@ neoForge.ideSyncTask generateModMetadata
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    // 告警源自 toolchain(JBR25) 跑 Lombok 注解处理时用的 Unsafe；给它 direct 一个 allow 关闭 JDK24+ 的告警。
+    // 只能放这里、不能放 gradle.properties 的 jvmargs：后者影响启动 daemon 的 JVM（可能是 JDK21），不认这个 JDK24+ 选项。
+    options.fork = true
+    options.forkOptions.jvmArgs.add('--sun-misc-unsafe-memory-access=allow')
 }
 
 idea {

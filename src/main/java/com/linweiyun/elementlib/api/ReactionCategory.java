@@ -2,9 +2,6 @@ package com.linweiyun.elementlib.api;
 
 /**
  * 元素反应的分类。
- *
- * <p>分类决定反应的对外表现：{@link #LUNAR} 与 {@link #STELLAR} 不出反应飘字，
- * 它们的表现由各自的伤害链负责。
  */
 public enum ReactionCategory {
     /** 增幅反应（融化 / 蒸发）。 */

@@ -5,11 +5,6 @@ import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 /**
  * 附着参数 —— 描述「这次附着本身的属性」，可随时 new 出临时参数。
- *
- * <p>常规附着的衰减公式（匀速衰减）：附着时间 {@code t = 7 + 2.5x}，速率 {@code v = 0.8x / t}；
- * 常规附着作为先手有 20% 损耗，实际初始量为 {@code 0.8x}。
- * 五个预设覆盖所有常规场景：WEAK / MEDIUM / STRONG / ULTRA_STRONG 走公式，
- * PERMANENT 为恒定附着（无限时间，定时补充）。
  */
 public class AttachmentProfile implements IPersistedSerializable {
 
@@ -47,7 +42,6 @@ public class AttachmentProfile implements IPersistedSerializable {
 
     /**
      * 恒定附着专用构造（衰减 0，无限时间）。
-     * 时长必须传 <b>-1</b>：构造器用 {@code durationSeconds < 0} 判定常驻。
      */
     public static AttachmentProfile permanent(float baseQuantity) {
         return new AttachmentProfile(baseQuantity, 1.0f, 0f, -1f);
@@ -66,7 +60,6 @@ public class AttachmentProfile implements IPersistedSerializable {
 
     /**
      * 按元素量选附着档次 —— 「元素量 → 附着参数」的唯一映射。
-     * 阈值：4U=超强 / 2U=强 / 1.5U=中 / 其余=弱。
      *
      * @param amount 本次攻击的元素量（U），{@code <= 0} 视作弱附着
      */

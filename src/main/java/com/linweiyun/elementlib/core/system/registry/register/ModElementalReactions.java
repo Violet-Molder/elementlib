@@ -29,7 +29,6 @@ public class ModElementalReactions {
     private static final boolean ENABLED =
             ElementLibConfig.demoReactionsEnabled() && ElementLibConfig.demoElementsEnabled();
 
-    /** 蒸发：水:火 = 1:2，火克水。 */
     @Nullable
     public static final DeferredHolder<ElementalReaction, VaporizeReaction> VAPORIZE = ENABLED
             ? ELEMENTAL_REACTIONS.register("vaporize", () -> new VaporizeReaction(
@@ -38,8 +37,6 @@ public class ModElementalReactions {
                     1f, 2f,
                     0))
             : null;
-
-    /** 融化：火:冰 = 1:2，火克冰（冻通过 getMainElement 归并到冰）。 */
     @Nullable
     public static final DeferredHolder<ElementalReaction, MeltReaction> MELT = ENABLED
             ? ELEMENTAL_REACTIONS.register("melt", () -> new MeltReaction(

@@ -6,9 +6,6 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * 元素反应类型 —— 注册在 {@code elementlib:reaction_types} 注册表里的对象。
- *
- * <p>实例自身不持有 id：id 就是它在反应类型注册表里的 key，注册之后由 {@link #getId()} 查询。
- * 使用者可以注册自己的反应类型，再用它构造自己的 {@code ElementalReaction}。
  */
 public final class ElementalReactionType {
 

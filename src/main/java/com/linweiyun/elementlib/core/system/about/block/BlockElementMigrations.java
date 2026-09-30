@@ -18,17 +18,6 @@ import java.util.function.Predicate;
 
 /**
  * <b>方块表现迁移注册表</b> —— 「元素挂上之后，方块该变成什么样」的登记处。
- *
- * <p>和 {@link BlockElementRules}（能不能被附着）成对：新增一种与元素有关的方块，
- * 只需要这两条注册，不改任何核心代码：
- * <pre>{@code
- * BlockElementRules.register(state -> state.is(MY_BLOCK), (state, el) -> ModElements.is(el, ModElements.PYRO), "my_block");
- * BlockElementMigrations.register(state -> state.is(MY_BLOCK),
- *         (host, container) -> host.level().setBlock(host.blockPos(), MELTED.get().defaultBlockState(), 3),
- *         "my_block");
- * }</pre>
- *
- * <p>迁移只读容器里的事实、只改方块状态，所以任何来源（玩家攻击、怪物踩踏、相邻火焰）走的都是同一条路。
  */
 public final class BlockElementMigrations {
 

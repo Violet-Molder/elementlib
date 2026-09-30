@@ -5,8 +5,6 @@ import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 
 /**
  * 叠加实例基类 —— 可以被存进 StatusContainer 的东西的统一规格。
- * 子类必须实现 {@link #tick()} / {@link #isFinished()} / {@link #copy()}，
- * 并让 {@link #getTypeId()} 返回序列化恢复用的类型标识。
  */
 public class StatusInstance implements IPersistedSerializable {
 

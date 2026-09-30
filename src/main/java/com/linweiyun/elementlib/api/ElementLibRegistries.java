@@ -9,19 +9,6 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
  * 注册表句柄：元素 / 反应 / 反应类型三个 {@link DeferredRegister} 与它们的 {@link ResourceKey}。
- *
- * <p>注册自己的内容时把 register 拿到 {@code modEventBus} 上即可：
- * <pre>{@code
- * public MyMod(IEventBus modEventBus) {
- *     ElementLibRegistries.ELEMENTS.register(modEventBus);
- *     ElementLibRegistries.REACTIONS.register(modEventBus);
- *     ElementLibRegistries.REACTION_TYPES.register(modEventBus);
- * }
- * // 然后注册自己的类（元素的构造器是 protected，继承 GenshinElement 即可）
- * ElementLibRegistries.ELEMENTS.register("my_element", MyElement::new);
- * ElementLibRegistries.REACTION_TYPES.register("my_reaction",
- *         () -> new ElementalReactionType("reaction.mymod.my_reaction", ReactionCategory.TRANSFORMATIVE));
- * }</pre>
  */
 public final class ElementLibRegistries {
 

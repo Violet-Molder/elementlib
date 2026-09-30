@@ -11,9 +11,6 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * <b>生物宿主</b> —— {@link ElementalHost} 在 {@link LivingEntity} 上的实现。
- *
- * <p>筛查委托给实体自己实现的 {@link ElementalAttachable}（mixin 注入到 {@code LivingEntity}，
- * 怪物可覆盖）；容器就是实体身上的 {@link ElementalAttachments#CONTAINER 状态容器}。
  */
 public final class EntityHost implements ElementalHost {
 

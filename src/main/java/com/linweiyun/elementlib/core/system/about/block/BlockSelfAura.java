@@ -12,14 +12,6 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * <b>方块的环境自附着</b> —— 「冰一直给自己挂冰、水一直给自己挂水」。
- *
- * <p>它是不衰减的常驻附着（{@link AttachmentProfile#PERMANENT}）：不随时间掉量，
- * 被反应消耗掉之后由 {@link ElementalAttachmentInstance#tick()} 的补量机制周期补回。
- *
- * <p>反应需要先手 + 后手：水方块被打冰时先手是水自带的水；没有这层自附着，冻结反应无从发生。
- *
- * <p>走的是内部附着（{@link ElementalAttachmentHelper#attachInternalTo}）：自附着只是让方块
- * 「本来就是水/冰」，不触发反应。
  */
 public final class BlockSelfAura {
 
@@ -31,8 +23,6 @@ public final class BlockSelfAura {
 
     /**
      * 确保这个方块的容器里有它自带的元素。
-     *
-     * <p>幂等：已经有就什么都不做；被反应消耗光了（实例被容器清掉）下次读容器时会补回来。
      */
     public static void ensure(BlockHost host, StatusContainer container, BlockState state) {
         if (host == null || container == null) {

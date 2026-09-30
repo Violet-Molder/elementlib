@@ -8,15 +8,10 @@ import org.slf4j.spi.NOPLoggingEventBuilder;
 
 /**
  * 带闸门的 logger：真正干活的是 {@code delegate}，本类只负责在总开关或组开关关掉时把调用吃掉。
- *
- * <p>名字一律用 {@link #delegate} 的名字——那正是声明 {@code LOGGER} 的那个类，所以日志里的类名不变。
- * 闸门关掉时连 {@code isXxxEnabled()} 也返回 {@code false}，{@code atLevel()} 那套退回 {@code NOP} builder。
  */
 final class GroupLogger implements Logger {
 
-    /** 真正的 logger：名字就是声明 LOGGER 的那个类 */
     private final Logger delegate;
-    /** 本 logger 属于哪一组 */
     private final LogGroup group;
 
     GroupLogger(Logger delegate, LogGroup group) {
@@ -24,7 +19,6 @@ final class GroupLogger implements Logger {
         this.group = group;
     }
 
-    /** 总开关或本组开关关掉了吗 */
     private boolean muted() {
         return !ModLog.isEnabled(group);
     }
@@ -33,8 +27,6 @@ final class GroupLogger implements Logger {
     public String getName() {
         return delegate.getName();
     }
-
-    // ===================== TRACE =====================
 
     @Override
     public boolean isTraceEnabled() {

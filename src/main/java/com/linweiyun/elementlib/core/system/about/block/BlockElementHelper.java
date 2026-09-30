@@ -34,12 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 方块元素行为 —— 「宿主适配 + 反应结果驱动的状态迁移」这一层。
- *
- * <p>方块的附着、筛查、反应全部走与生物相同的入口：{@code applyElement()} → {@link BlockHost}
- * → {@code ElementalAttachmentHelper.attach(...)}，只有 {@code migrateBlockState()} 是方块独有的
- * （读容器里的事实 → 交给 {@link BlockElementMigrations} 改方块状态）。
- *
- * <p>内置规则（水与冰族）只在示范元素启用时注册；其余环境附着行为对「元素不存在」是安全的：
  * 取不到元素就跳过。
  */
 public final class BlockElementHelper {
@@ -56,8 +50,6 @@ public final class BlockElementHelper {
 
     /**
      * 对方块附着元素 —— 唯一入口。
-     *
-     * <p>本方法不做「能不能附着」的前置判断：那是宿主的活（{@link BlockElementRules}）。
      *
      * @param gauge       附着量（U），作为这条附着的初始量（方块侧无损耗）
      * @param decayPerSec 衰减率（U/s）
@@ -116,9 +108,6 @@ public final class BlockElementHelper {
 
     /**
      * 带上「当前维度是否在下雨」的重载（{@link #onServerTick} 的批量扫描用）。
-     *
-     * <p>雨没下时「淋雨挂水」不可能成立，而 {@code isRainingAt} 要走生物群系降水查询、
-     * {@code canSeeSky} 要走高度图 —— 把布尔判断提到循环外，非雨天每个实体只剩一次 {@code isInWater()}。
      */
     private static void checkAndApplyWaterToEntity(LivingEntity entity, boolean raining) {
         if (!(entity.level() instanceof ServerLevel level)) return;
@@ -167,9 +156,6 @@ public final class BlockElementHelper {
 
     /**
      * 玩家专用的环境附着检查 —— 每 tick 跑一次，负责「刚进水 / 刚踩进火」那一刻就挂上元素。
-     *
-     * <p>1 秒一轮的批量扫描对「一直站在水里」够用，但「刚进水」最多要等 1 秒。这里只补
-     * 「身上还没有这个元素」的情况：站着不动不会每 tick 往容器里灌。
      */
     public static void checkPlayerEnvironment(Player player) {
         if (player == null || player.isSpectator()) return;
@@ -247,10 +233,6 @@ public final class BlockElementHelper {
 
     /**
      * 每一 tick 统一推进登记在案的冻结方块。
-     *
-     * <p>已经不冻的位置顺手摘掉（否则永远占着每 tick 的检查额度）；区块没加载的位置跳过即可，
-     * 否则一张满是未加载位置的表会把额度吃光（区块重新加载时 {@link BlockElementTicker#onChunkLoad}
-     * 会把该补的补回来）。
      */
     public static void trackedTick(ServerLevel level) {
         Set<Long> set = FROZEN_SITES.get(level.dimension());

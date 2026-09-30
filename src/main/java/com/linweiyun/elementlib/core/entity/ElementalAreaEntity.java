@@ -22,8 +22,6 @@ import java.util.UUID;
 
 /**
  * 元素区域实体：在半径内按固定间隔结算伤害，寿命到期时爆炸一次并销毁。
- *
- * <p>逻辑只在服务端执行；可见性由 {@code sendParticles} 提供，客户端不需要模型。
  */
 public abstract class ElementalAreaEntity extends Entity {
 

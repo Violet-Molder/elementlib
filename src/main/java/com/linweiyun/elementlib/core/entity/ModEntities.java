@@ -14,9 +14,6 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * 示范实体的实体类型注册：{@code thunder_cloud} / {@code stellar_vortex}。
- *
- * <p>两个实体类型都只在「示范元素 + 示范反应」同时开启时注册；关闭时
- * {@link #THUNDER_CLOUD} / {@link #STELLAR_VORTEX} 保持 {@code null}，取用前必须判空。
  */
 public final class ModEntities {
 

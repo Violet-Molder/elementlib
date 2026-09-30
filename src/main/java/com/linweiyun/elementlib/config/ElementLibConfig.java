@@ -5,15 +5,6 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 /**
  * 三个配置文件的 Spec 与全库统一的读取入口。
- *
- * <ul>
- *   <li>{@code elementlib/elements.toml} —— 示范元素、附着图标总闸；</li>
- *   <li>{@code elementlib/reactions.toml} —— 示范反应、反应倍率与各反应示范伤害；</li>
- *   <li>{@code elementlib/items.toml} —— 示范物品。</li>
- * </ul>
- *
- * <p>「要不要注册」发生在配置加载之前，读 {@link ElementLibEarlyFlags}；配置加载后再由
- * {@link #syncEarlyFlags()} 用 Spec 的真实值覆盖一次。
  */
 public final class ElementLibConfig {
 

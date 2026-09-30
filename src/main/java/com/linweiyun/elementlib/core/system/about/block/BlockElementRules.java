@@ -14,15 +14,7 @@ import java.util.function.Predicate;
 
 /**
  * <b>「这个方块能被什么附着」的注册表</b>。
- *
  * <p>新增一种「与元素有关的方块」时，不需要改这里的判断逻辑，而是注册一条规则：
- * <pre>{@code
- * BlockElementRules.register(
- *         state -> state.is(MyBlocks.FIRE_CRYSTAL.get()),
- *         (state, element) -> ModElements.is(element, ModElements.PYRO),
- *         "my_block");
- * }</pre>
- *
  * <p>规则按注册顺序匹配，先命中先返回。内置的水与冰族规则在静态块里注册，且只在示范元素启用时注册。
  */
 public final class BlockElementRules {
@@ -73,15 +65,10 @@ public final class BlockElementRules {
 
     static {
         if (ElementLibConfig.demoElementsEnabled()) {
-            // 水：收冰（冰遇水 → 冻结反应 → 浮冰 + 冻元素）、也收冻（冻元素直接落到水上同样成冰）。
-            // 必须收冻：冻结反应的生成物就是冻元素，只收冰会让水「允许冰挂上来、却把生成的冻元素拒掉」，
-            // 结果反应发生了、容器里却没有冻元素，迁移表看不到冻，水永远结不成冰。
             register(state -> isSourceWater(state),
                     (state, element) -> ModElements.is(element, ModElements.CYRO)
                             || ModElements.is(element, ModElements.FROZEN),
                     "minecraft:water");
-
-            // 冰族（浮冰/冰/浮冰砖/蓝冰）：收火（融化）、收冰（叠冰）、收冻（刷新冻元素）
             register(state -> isIceFamily(state),
                     (state, element) -> ModElements.is(element, ModElements.PYRO)
                             || ModElements.is(element, ModElements.CYRO)

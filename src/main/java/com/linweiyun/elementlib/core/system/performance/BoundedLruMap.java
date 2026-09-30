@@ -5,10 +5,6 @@ import java.util.Map;
 
 /**
  * 有上限的 LRU 表（计算优化模块）。
- *
- * <p>给「按实体 UUID 记一下上次触发是第几刻」这类只 put 不 remove 的静态小表加上限，
- * 避免键随实体不断产生而只涨不落。
- * 只适用于<b>单线程访问</b>的表（服务端逻辑、客户端渲染各自一份）。
  */
 public final class BoundedLruMap {
 

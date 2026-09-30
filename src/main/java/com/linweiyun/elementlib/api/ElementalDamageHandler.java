@@ -5,19 +5,6 @@ import net.minecraft.world.entity.LivingEntity;
 
 /**
  * 伤害出口：反应与区域实体的伤害计算、结算、增幅倍率全部经过这里。
- *
- * <p>三个方法都有默认实现（按配置的基础值直接打原版魔法伤害），
- * 使用者只需替换关心的那一个，不必实现全部。通过
- * {@link ElementLibApi#setDamageHandler(ElementalDamageHandler)} 换掉。
- *
- * <pre>{@code
- * ElementLibApi.setDamageHandler(new ElementalDamageHandler() {
- *     @Override
- *     public float computeDamage(ElementalDamageContext ctx) {
- *         return ctx.baseDamage() * 2.0f;   // 换成自己的公式
- *     }
- * });
- * }</pre>
  */
 public interface ElementalDamageHandler {
 

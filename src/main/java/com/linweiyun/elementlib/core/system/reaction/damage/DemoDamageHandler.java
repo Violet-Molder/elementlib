@@ -7,12 +7,8 @@ import net.minecraft.world.entity.LivingEntity;
 
 /**
  * 默认伤害处理器：按配置的基础值直接结算，用原版魔法伤害源打出去。
- *
- * <p>这是 {@code ReactionDamage.DEFAULT} 与 {@code ElementLibApi.damageHandler()} 的初值。
  */
 public final class DemoDamageHandler implements ElementalDamageHandler {
-
-    /** 单例。 */
     public static final DemoDamageHandler INSTANCE = new DemoDamageHandler();
 
     private DemoDamageHandler() {

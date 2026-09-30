@@ -18,12 +18,6 @@ public final class ReactionPriorityCalculator {
     /** 未登记在默认顺序表里的主元素统一排到最后（比表内任何下标都大）。 */
     public static final int UNKNOWN_PRIORITY = 50;
 
-    /**
-     * 默认反应优先级顺序 —— 唯一真相。
-     *
-     * <p>后手元素与各先手元素反应时，按先手元素（主元素）在本表里的下标从小到大排序；
-     * 索引越靠前的先手元素越先被反应消耗。
-     */
     private static final List<DeferredHolder<GenshinElement, ? extends GenshinElement>> DEFAULT_ORDER = List.of(
             ModElements.ANEMO, ModElements.CYRO, ModElements.ELECTRO,
             ModElements.HYDRO, ModElements.FROZEN, ModElements.PYRO,
@@ -32,21 +26,12 @@ public final class ReactionPriorityCalculator {
     private ReactionPriorityCalculator() {
     }
 
-    /**
-     * 算一个反应的具体优先级 —— 只看先手（目标身上已有）元素的主元素排在顺序表里的位置。
-     *
-     * <p>注册时手填了非负 {@code basePriority} 的反应不走这里；只有填 -1（表示「用默认顺序」）的反应才会调用。
-     *
-     * @param defenderElement 先手附着的元素（目标身上已有的那一个），可以为 {@code null}
-     */
     public static int computeFor(@Nullable GenshinElement defenderElement) {
         if (defenderElement == null) {
             return UNKNOWN_PRIORITY;
         }
         return priorityOf(defenderElement.getMainElement());
     }
-
-    /** 主元素在默认顺序表里的下标；不在表内（含 {@code null}）返回 {@link #UNKNOWN_PRIORITY}。 */
     public static int priorityOf(@Nullable GenshinElement mainElement) {
         if (mainElement == null) {
             return UNKNOWN_PRIORITY;

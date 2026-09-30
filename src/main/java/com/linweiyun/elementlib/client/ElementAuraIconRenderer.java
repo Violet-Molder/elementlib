@@ -9,7 +9,6 @@ import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.GenshinElement;
 import com.linweiyun.elementlib.core.element.ModElements;
 import com.linweiyun.elementlib.core.status.StatusInstance;
-import com.linweiyun.elementlib.core.system.about.AttachmentProfile;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
 import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
 import com.linweiyun.elementlib.core.system.about.host.EntityHost;
@@ -67,17 +66,14 @@ public final class ElementAuraIconRenderer {
     private static final Set<GenshinElement> MISSING_ICONS =
             Collections.newSetFromMap(new IdentityHashMap<>());
 
-    /** 闪烁的最低不透明度。 */
-    private static final float BLINK_ALPHA_MIN = 0.35f;
+    /** 低量判定：剩余衰减时间 ≤ 此值（秒）的元素才算“低量”，低量才参与闪烁。 */
+    private static final float BLINK_THRESHOLD_SECONDS = 2.0f;
 
-    /** 满附着时的闪烁周期（tick）—— 量越足闪得越快。 */
-    private static final float BLINK_PERIOD_FULL = 10.0f;
+    /** 闪烁周期（tick）；方波：半个周期可见、半个周期隐去。 */
+    private static final long BLINK_PERIOD = 10L;
 
-    /** 附着将尽时的闪烁周期（tick）。 */
-    private static final float BLINK_PERIOD_EMPTY = 50.0f;
-
-    /** 待绘图标：主元素 + 驱动闪烁的附着量信息。 */
-    private record AuraIcon(GenshinElement element, float unit, float baseQuantity, boolean permanent) {
+    /** 待绘图标：主元素 + 最大元素量 + 是否低量（同主元素任一附着低量则低量）。 */
+    private record AuraIcon(GenshinElement element, float unit, boolean isLow) {
     }
 
     /** 每实体复用的待绘图标列表，避免每实体每帧新建集合。 */
@@ -123,7 +119,6 @@ public final class ElementAuraIconRenderer {
             if (distance > MAX_DISTANCE) continue;
 
             StatusContainer container = living.getData(ElementalAttachments.CONTAINER);
-            if (container == null) continue;
             if (!collectMainElements(container, living)) continue;
 
             poseStack.pushPose();
@@ -160,17 +155,36 @@ public final class ElementAuraIconRenderer {
             GenshinElement main = element.getMainElement();
             if (main == null) continue;
 
-            AttachmentProfile profile = ea.getProfile();
-            float baseQuantity = profile == null ? ea.getUnit() : profile.getBaseQuantity();
+            boolean isLow = isDecayLow(ea);
             int index = indexOfIcon(main);
             if (index < 0) {
-                MAIN_ELEMENTS.add(new AuraIcon(main, ea.getUnit(), baseQuantity, ea.isPermanent()));
+                MAIN_ELEMENTS.add(new AuraIcon(main, ea.getUnit(), isLow));
             } else if (ea.getUnit() > MAIN_ELEMENTS.get(index).unit()) {
-                // 类元素并入主元素：同名主元素只留元素量最大的那一条
-                MAIN_ELEMENTS.set(index, new AuraIcon(main, ea.getUnit(), baseQuantity, ea.isPermanent()));
+                // 类元素并入主元素：同名主元素只留元素量最大的那一条；low 标记取或
+                AuraIcon prev = MAIN_ELEMENTS.get(index);
+                MAIN_ELEMENTS.set(index, new AuraIcon(main, ea.getUnit(), prev.isLow() || isLow));
+            } else if (isLow && !MAIN_ELEMENTS.get(index).isLow()) {
+                // 量没更大但这条低量：只补上低量标记
+                AuraIcon prev = MAIN_ELEMENTS.get(index);
+                MAIN_ELEMENTS.set(index, new AuraIcon(main, prev.unit(), true));
             }
         }
         return !MAIN_ELEMENTS.isEmpty();
+    }
+
+    /**
+     * 低量判定（完全照搬原项目）：衰减周期内剩余时间 ≤ {@link #BLINK_THRESHOLD_SECONDS} 秒才算低量；
+     * 恒定附着不衰减，永远不算低量。
+     */
+    private static boolean isDecayLow(ElementalAttachmentInstance ea) {
+        if (ea.isPermanent()) {
+            return false;
+        }
+        float rate = ea.getCurrentDecayPerSecond();
+        if (rate <= 0.0001f) {
+            return false;
+        }
+        return ea.getUnit() / rate <= BLINK_THRESHOLD_SECONDS;
     }
 
     /** 已在列表里的同名主元素下标，没有返回 {@code -1}。 */
@@ -188,12 +202,17 @@ public final class ElementAuraIconRenderer {
         float totalWidth = count * ICON_SIZE + (count - 1) * ICON_SPACING;
         float startX = -totalWidth / 2.0f;
 
+        // 方波：亮半周期、灭半周期（完全照搬原项目）
+        boolean blinkVisible = ((long) time % BLINK_PERIOD) < (BLINK_PERIOD / 2L);
+
         for (int i = 0; i < count; i++) {
             AuraIcon icon = MAIN_ELEMENTS.get(i);
             RenderType type = iconType(icon.element());
             if (type == null) continue;
 
-            float alpha = blinkAlpha(icon, time);
+            // 闪烁：低量且当前相位不可见时整帧跳过（保持占位）；可见时恒全亮，不再带 alpha 渐暗
+            if (icon.isLow() && !blinkVisible) continue;
+
             float x1 = startX + i * (ICON_SIZE + ICON_SPACING);
             float x2 = x1 + ICON_SIZE;
             float yTop = ICON_SIZE / 2.0f;
@@ -203,24 +222,8 @@ public final class ElementAuraIconRenderer {
                     drawTexturedQuad(buffer, pose.pose(), 0.0f,
                             x1, yBottom, x2, yTop,
                             1.0f, 0.0f, 0.0f, 1.0f,
-                            1.0f, 1.0f, 1.0f, alpha));
+                            1.0f, 1.0f, 1.0f, 1.0f));
         }
-    }
-
-    /**
-     * 按元素量闪烁：剩余量占附着满量的比例越高，闪烁越快；恒定附着不闪。
-     *
-     * <p>不透明度在 {@link #BLINK_ALPHA_MIN} 与 1 之间按正弦往复。
-     */
-    private static float blinkAlpha(AuraIcon icon, double time) {
-        if (icon.permanent() || icon.baseQuantity() <= 0f) {
-            return 1.0f;
-        }
-        float ratio = Mth.clamp(icon.unit() / icon.baseQuantity(), 0.0f, 1.0f);
-        float period = Mth.lerp(ratio, BLINK_PERIOD_EMPTY, BLINK_PERIOD_FULL);
-        // 先取余再进正弦：世界时间很大时也不会丢精度
-        double phase = Math.sin((time % period) * (Math.PI * 2.0d) / period);
-        return Mth.lerp((float) (0.5d + 0.5d * phase), BLINK_ALPHA_MIN, 1.0f);
     }
 
     /** 取元素的图标 {@link RenderType}；没有贴图返回 {@code null} 并记进缺失表。 */
@@ -238,7 +241,7 @@ public final class ElementAuraIconRenderer {
                 ElementLib.MOD_ID, "icon/elemental/" + element.getId() + ".png");
 
         ResourceManager resources = Minecraft.getInstance().getResourceManager();
-        if (resources == null || resources.getResource(texture).isEmpty()) {
+        if (resources.getResource(texture).isEmpty()) {
             MISSING_ICONS.add(element);
             return null;
         }

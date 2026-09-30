@@ -1,0 +1,90 @@
+# ElementLib Non-Commercial Open License (NC-Open) v1.0
+
+Copyright (c) 2026 ElementLib contributors.
+
+Written in English for global distribution; the pivotal terms are listed below.
+
+## 0. Definitions
+
+- **"Project"** means the ElementLib software (source code, resources, assets, and
+  build metadata) distributed under this license.
+- **"You"** means any person or legal entity exercising rights under this license.
+- **"Original Project"** means the official ElementLib project hosted at
+  `https://github.com/Violet-Molder/elementlib` (the official homepage).
+- **"Non-Commercial Use"** means use that does not, in whole or in part, directly or
+  indirectly generate revenue, profit, remuneration, or any other form of compensation.
+
+## 1. Grant of License
+
+You are granted a worldwide, royalty-free, non-exclusive, non-sublicensable license to
+use, copy, modify, merge, and distribute the Project, subject to the terms and
+conditions in this license.
+
+## 2. Non-Commercial Restriction (Prohibited Use)
+
+**Commercial use of the Project, whether in original or modified form, is strictly
+prohibited for any reason.** This includes, but is not limited to:
+
+- Selling the Project or any part of it, whether directly or bundled with other products;
+- Distributing the Project behind a paywall, or as part of a paid service;
+- Using the Project in any business, product, service, or advertisement that generates
+  income;
+- Accepting donations or rewards **solely or substantially** in exchange for providing
+  access to the Project or its modified versions.
+
+If you are in doubt whether a planned use is commercial, contact the original author
+before use. Violating this clause terminates your rights granted under this license
+immediately.
+
+## 3. Share-Alike / Open-Source Requirement for Modifications
+
+If you modify the Project and publish or apply the modified version in any **public**
+project (including public modpacks, public repositories, public servers, or public
+releases), you MUST:
+
+1. Release the modified work as **open source** under the same license (NC-Open v1.0)
+   or a license with equivalent non-commercial and share-alike obligations; and
+2. Keep a clear, visible attribution to the **Original Project** and its homepage
+   (`https://github.com/Violet-Molder/elementlib`) in any credits, README, or about
+   section, wherever reasonably possible.
+
+Private, non-public use of modifications is not covered by this obligation, but
+non-commercial restriction from Section 2 still applies.
+
+## 4. Attribution
+
+Any copy or modified distribution of the Project must retain this license notice, the
+copyright notice above, and attribution to the Original Project and its contributors.
+
+## 5. No Implied Endorsement
+
+This license does not grant permission to use the names, logos, or trademarks of the
+Project or its contributors to endorse or promote any product derived from this Project,
+without prior written permission.
+
+## 6. Warranty Disclaimer
+
+THE PROJECT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE, AND NON-INFRINGEMENT. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE
+PROJECT IS WITH YOU.
+
+## 7. Limitation of Liability
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES,
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE PROJECT OR THE USE OR OTHER DEALINGS IN THE PROJECT.
+
+## 8. Termination
+
+This license and the rights granted under it will terminate automatically if you violate
+any of its terms. Upon termination, you must cease all use and distribution of the
+Project and destroy all copies.
+
+## 9. Miscellaneous
+
+- This license shall be governed by and construed in accordance with the laws of the
+  jurisdiction of the original author, without regard to its conflict-of-law provisions.
+- If any provision of this license is held to be invalid or unenforceable, the remaining
+  provisions shall remain in full force and effect.
+- The author reserves all rights not expressly granted under this license.

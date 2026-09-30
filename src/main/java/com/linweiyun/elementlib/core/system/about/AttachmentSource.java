@@ -2,10 +2,6 @@ package com.linweiyun.elementlib.core.system.about;
 
 /**
  * 附着来源 —— 决定「谁和谁能相互覆盖」。
- *
- * <p>只有同元素 + 同来源的两份附着才会互相覆盖；不同来源的同元素是容器里两个独立的实例。
- * 除 {@link #NORMAL_ATTACK} 外的来源都是「直接附着」：无损耗（lossMultiplier = 1.0），
- * 且不遵循后手不残留规则。
  */
 public enum AttachmentSource {
 

@@ -1,4 +1,31 @@
-# 项目排除路径
+# ===== Gradle 构建产物 =====
 /.gradle/
 /build/
-/build/classes/java/main/
+/out/
+*.class
+*.jar
+
+# ===== Minecraft / NeoForge 运行目录 =====
+/run/
+/run-client/
+/run-server/
+/run-data/
+logs/
+crash-reports/
+*.log
+hs_err_pid*
+
+# ===== IDE 配置 =====
+/.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+bin/
+target/
+
+# ===== 操作系统 =====
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -25,11 +25,6 @@ import java.util.function.Supplier;
 
 /**
  * 冻结反应 —— 特殊反应，水:冰 = 1:1。
- *
- * <p>双方同时消耗，生成的冻元素量 = 消耗总量 × {@value #FROZEN_MULTIPLIER}。
- * 冻本身不参与冻结（已经冻住不能再冻），也不参与这一侧的消耗。
- *
- * <p>注册参数：{@code elementA = 水}、{@code elementB = 冰}，无克制方，不影响伤害。
  */
 public class FreezeReaction extends ElementalReaction {
     public static final Logger LOGGER = ModLog.getLogger(LogGroup.ELEMENT);
@@ -41,16 +36,12 @@ public class FreezeReaction extends ElementalReaction {
                           float ratioA, float ratioB, int basePriority) {
         super(type, elementAId, elementBId, ratioA, ratioB, basePriority);
     }
-
-    /** 冻元素不参与冻结反应的任何一侧配对。 */
     @Override
     public boolean canMatch(GenshinElement attackerElement, GenshinElement defenderElement) {
         if (ModElements.is(attackerElement, ModElements.FROZEN)) return false;
         if (ModElements.is(defenderElement, ModElements.FROZEN)) return false;
         return super.canMatch(attackerElement, defenderElement);
     }
-
-    /** 覆盖基类的主元素归并：排除冻实例，只让精确的水 / 冰参与消耗。 */
     @Override
     public boolean canConsume(ElementalAttachmentInstance instance, GenshinElement slotElement) {
         if (ModElements.is(instance.getElement(), ModElements.FROZEN)) return false;
@@ -61,14 +52,6 @@ public class FreezeReaction extends ElementalReaction {
     public boolean isBlocked(ReactionContext context) {
         return ModElements.is(context.attackerElement(), ModElements.FROZEN);
     }
-
-    /**
-     * 冻结的消耗与生成：算出双方消耗量后扣减，再按消耗总量 × {@value #FROZEN_MULTIPLIER} 生成冻元素。
-     *
-     * <p>{@code attacker} 指后手（本次附着的一方），{@code defender} 指先手（目标身上已有的）。
-     * 后手可能是注册时的 A 也可能是 B，用 {@code attackerIsA} 映射回固定槽位。
-     * 方块端没有实体：直接向容器添加冻，不走实体附着。
-     */
     @Override
     public ReactionResult execute(ReactionContext ctx) {
         GenshinElement elA = getElementA();
@@ -95,7 +78,6 @@ public class FreezeReaction extends ElementalReaction {
         float totalConsumed = consumedA + consumedB;
         float consumedAttacker = attackerIsA ? consumedA : consumedB;
 
-        // 消耗前先记下这一格 / 这个目标上原有的水冰来源，挂到新生成的冻上。
         Set<String> cyroKeysBefore = new LinkedHashSet<>();
         Set<String> hydroKeysBefore = new LinkedHashSet<>();
         for (StatusInstance inst : ctx.targetContainer().getAll()) {
@@ -128,7 +110,6 @@ public class FreezeReaction extends ElementalReaction {
                 .build();
     }
 
-    /** 生成冻元素附着，并把水冰来源键与冻结衰减状态带过去。 */
     private void generateFrozen(ReactionContext ctx, float totalConsumed,
                                 Set<String> cyroKeysBefore, Set<String> hydroKeysBefore) {
         if (totalConsumed <= 0f) {
@@ -142,7 +123,6 @@ public class FreezeReaction extends ElementalReaction {
         float frozenQty = totalConsumed * FROZEN_MULTIPLIER;
         AttachmentProfile frozenProfile = new AttachmentProfile(frozenQty, 1.0f, 0.0f, 999.0f);
 
-        // 冻也是附着，同样走宿主入口（宿主筛查、覆盖规则照走）；用 attachInternal 避免递归触发反应。
         ElementalHost frozenHost = ctx.targetHost();
         if (frozenHost == null && ctx.targetEntity() != null) {
             frozenHost = EntityHost.of(ctx.targetEntity());
@@ -151,7 +131,6 @@ public class FreezeReaction extends ElementalReaction {
             ElementalAttachmentHelper.attachInternal(
                     frozenHost, frozen, AttachmentSource.SPECIAL, frozenProfile);
         } else {
-            // 没有宿主信息时退回直接写容器，至少不让冻结丢效果。
             ctx.targetContainer().add(new ElementalAttachmentInstance(
                     frozen, AttachmentSource.SPECIAL, frozenProfile, frozenQty));
         }
@@ -170,7 +149,6 @@ public class FreezeReaction extends ElementalReaction {
         }
     }
 
-    /** 方块上的形态变化（水结冰 / 冰化水）不显示文字；生物身上照常。 */
     @Override
     public boolean showsIndicator(ReactionContext context) {
         return !(context.targetHost() instanceof BlockHost);

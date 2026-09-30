@@ -16,8 +16,6 @@ import net.neoforged.neoforge.registries.RegistryBuilder;
 
 /**
  * elementlib 的三个自定义注册表：元素、元素反应、反应类型。
- *
- * <p>注册表对象在 {@link NewRegistryEvent} 里创建，{@code DeferredRegister} 由各自的持有类注册到事件总线。
  */
 @EventBusSubscriber(modid = ElementLib.MOD_ID)
 public class ModRegistries {

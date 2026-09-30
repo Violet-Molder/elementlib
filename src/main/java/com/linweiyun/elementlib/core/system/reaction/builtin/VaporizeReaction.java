@@ -16,9 +16,6 @@ import java.util.function.Supplier;
 
 /**
  * 蒸发反应 —— 增幅反应，火:水 = 1:2。
- *
- * <p>先手水后手火（火克水）用 {@code VAPORIZE} 倍率，反之为 {@code VAPORIZE_NEGATIVE}。
- * 冻结状态下禁止蒸发。
  */
 public class VaporizeReaction extends ElementalReaction {
 
@@ -52,7 +49,6 @@ public class VaporizeReaction extends ElementalReaction {
         float attackerQty = ctx.attackerUnit();
         float defenderQty = defInstance.getUnit();
 
-        // 后手是 A 时 (attackerQty, defenderQty) 就是 (A, B)；否则要换位。
         float[] consumed = attackerIsA
                 ? calculateConsumption(attackerQty, defenderQty)
                 : calculateConsumption(defenderQty, attackerQty);
@@ -62,7 +58,6 @@ public class VaporizeReaction extends ElementalReaction {
         consumeElementUnit(ctx.targetContainer(), elB, consumedB);
         consumeElementUnit(ctx.targetContainer(), elA, consumedA);
 
-        // 后手是克制方（attackerIsA）时吃高倍率。
         float configured = attackerIsA ? getDominantMultiplier() : getSubmissiveMultiplier();
         float multiplier = ReactionDamage.amplify(type(), configured);
         float consumedAttacker = attackerIsA ? consumedA : consumedB;
@@ -75,7 +70,6 @@ public class VaporizeReaction extends ElementalReaction {
                 .build();
     }
 
-    /** 找主元素匹配的先手实例，精确匹配优先，其次类元素。 */
     @Nullable
     private ElementalAttachmentInstance findDefenderInstance(ReactionContext ctx,
                                                              @Nullable GenshinElement targetMain) {

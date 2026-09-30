@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * 一次附着的结果 —— 「宿主收没收这次附着」+「附着之后触发了什么反应」。
- * 伤害管线要增幅倍率就取 {@link #reaction()}，其它路径可以不看返回值。
  *
  * @param attached 宿主是否接受了这次附着
  * @param reaction 附着之后触发的反应（没发生则 {@code null}）

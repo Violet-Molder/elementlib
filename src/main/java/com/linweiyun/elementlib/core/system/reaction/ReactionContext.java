@@ -25,10 +25,6 @@ public record ReactionContext(GenshinElement attackerElement, float attackerUnit
                               Entity attackerEntity,
                               StatusContainer targetContainer, LivingEntity targetEntity,
                               ElementalHost targetHost) {
-
-    /**
-     * 后手元素是否遵循"后手不残留"规则
-     */
     public boolean attackerFollowsNoResidualRule() {
         return attackerSource == AttachmentSource.NORMAL_ATTACK;
     }

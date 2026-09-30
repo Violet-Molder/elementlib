@@ -8,9 +8,6 @@ import java.util.List;
 
 /**
  * 早期注册开关 —— 注册决策必须发生在配置真正加载之前，所以在类初始化时直接读配置文件。
- *
- * <p>按行匹配 {@code key = true|false}，容忍空格、注释与缺文件；缺文件或读失败一律取默认 {@code true}。
- * 配置加载完成后由 {@code ElementLibConfig.syncEarlyFlags()} 用 Spec 的真实值覆盖一次。
  */
 public final class ElementLibEarlyFlags {
 

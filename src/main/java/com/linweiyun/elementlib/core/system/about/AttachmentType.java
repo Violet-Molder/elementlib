@@ -2,8 +2,6 @@ package com.linweiyun.elementlib.core.system.about;
 
 /**
  * 附着档次枚举 —— 技能填 {@code elementAmount()} 时的取值来源。
- * 每个档次直接持有一个 {@link AttachmentProfile} 预设，数值一律从它读；
- * 元素量 → 档次的完整映射见 {@link AttachmentProfile#forAmount(float)}。
  */
 public enum AttachmentType {
   WEAK(AttachmentProfile.WEAK),

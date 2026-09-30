@@ -24,18 +24,12 @@ import java.util.function.Supplier;
 
 /**
  * 超导反应 —— 雷 + 冰，剧变反应，注册比 1:1 双方同时消耗。
- *
- * <p>消耗结束后按变体门结算伤害：普通分支出一次冰元素超导伤害；星超导分支先出
- * 雷再出冰的两次伤害。同一目标两次结算至少隔 {@value #DAMAGE_COOLDOWN_TICKS} 刻，
- * 冷却期内反应照常发生、元素照常消耗。
  */
 public class SuperConductReaction extends ElementalReaction {
 
     public static final Logger LOGGER = ModLog.getLogger(LogGroup.ELEMENT);
 
     private static final int DAMAGE_COOLDOWN_TICKS = 10;
-
-    /** 键是实体 UUID，有界 LRU 防止静态表随刷怪无限增长。 */
     private static final Map<UUID, Long> lastDamageTick = BoundedLruMap.create();
 
     public SuperConductReaction(Supplier<ElementalReactionType> reactionType,
@@ -79,7 +73,6 @@ public class SuperConductReaction extends ElementalReaction {
                 .build();
     }
 
-    /** 结算一次超导伤害；冷却期内或方块端（无实体）直接跳过。 */
     private static void applyDamageOffCooldown(ReactionContext context) {
         LivingEntity target = context.targetEntity();
         if (target == null) return;

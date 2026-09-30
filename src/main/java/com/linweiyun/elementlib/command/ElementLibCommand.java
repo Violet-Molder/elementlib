@@ -53,22 +53,6 @@ import java.util.List;
 
 /**
  * <b>ElementLib 的游戏内测试入口</b> —— {@code /elementlib ...}。
- *
- * <p>所有子命令都走真正的 {@link ElementalAttachmentHelper#attach} / 方块宿主，反应会被真实触发。
- *
- * <pre>
- * /elementlib attach &lt;element&gt; [amount] [source] [targets]   给目标（默认自己）挂元素
- * /elementlib clear [targets]                                 清空目标容器
- * /elementlib info [targets]                                  列出目标身上的附着
- * /elementlib decay &lt;tag&gt; [hits]                              跑一次计时计数器并打印元素量系数
- * /elementlib block &lt;element&gt; [amount]                        给脚下的方块挂元素（环境附着）
- * /elementlib reactions                                       打印已注册反应清单
- * /elementlib demo &lt;stellar_swirl|stellar_conduce|lunar&gt; &lt;on|off&gt;  切换示范变体
- * /elementlib demo status                                     打印示范变体开关
- * /elementlib icon &lt;on|off&gt;                                   元素附着图标总闸
- * /elementlib wand                                            获得元素法杖（示范物品开启时）
- * /elementlib swords                                          获得七把元素剑（示范物品开启时）
- * </pre>
  */
 @EventBusSubscriber(modid = ElementLib.MOD_ID)
 public final class ElementLibCommand {

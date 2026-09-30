@@ -17,31 +17,19 @@ public final class VariantGateHolder {
 
     private VariantGateHolder() {
     }
-
-    /** 当前伤害处理器，永不为 {@code null}。 */
     public static ElementalDamageHandler damageHandler() {
         return damageHandler;
     }
-
-    /** 设置伤害处理器；传 {@code null} 恢复默认处理器。 */
     public static void setDamageHandler(@Nullable ElementalDamageHandler handler) {
         damageHandler = handler != null ? handler : DemoDamageHandler.INSTANCE;
     }
-
-    /** 当前变体门，永不为 {@code null}。 */
     public static ReactionVariantGate gate() {
         return gate;
     }
-
-    /** 设置变体门；传 {@code null} 恢复默认门。 */
     public static void setGate(@Nullable ReactionVariantGate variantGate) {
         gate = variantGate != null ? variantGate : DemoVariantGate.INSTANCE;
     }
-
-    /** 默认变体门：直接读 {@link DemoContentToggles}。 */
     public static final class DemoVariantGate implements ReactionVariantGate {
-
-        /** 默认门单例。 */
         public static final DemoVariantGate INSTANCE = new DemoVariantGate();
 
         private DemoVariantGate() {

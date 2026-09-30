@@ -6,10 +6,6 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * 星体系 / 月感电变体的开关门：返回 {@code true} 时对应反应走变体分支。
- *
- * <p>默认实现 {@code VariantGateHolder.DemoVariantGate} 读 {@link DemoContentToggles}，
- * 由命令或物品切换；接入真实角色判定时用
- * {@link ElementLibApi#setVariantGate(ReactionVariantGate)} 替换。
  */
 public interface ReactionVariantGate {
 

@@ -9,6 +9,9 @@ import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.linweiyun.elementlib.util.log.LogGroup;
 import com.linweiyun.elementlib.util.log.ModLog;
+import lombok.Getter;
+import lombok.Setter;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import org.slf4j.Logger;
@@ -23,18 +26,23 @@ public class ElementalAttachmentInstance extends StatusInstance {
 
     private transient GenshinElement element;
 
+    @Getter
     @Persisted(key = "source")
     private AttachmentSource source;
 
+    @Getter
     @Persisted(key = "profile")
     private AttachmentProfile profile;
 
+    @Getter
     @Persisted(key = "unit")
     private float unit;
 
+    @Getter
     @Persisted(key = "current_decay_per_second")
     private float currentDecayPerSecond;
 
+    @Getter
     @Persisted(key = "permanent")
     private boolean permanent;
 
@@ -47,19 +55,28 @@ public class ElementalAttachmentInstance extends StatusInstance {
     @Persisted(key = "replenish_timer")
     private int replenishTimer;
 
+    @Getter
     @Persisted(key = "source_character_key")
     private String sourceCharacterKey;
 
+    @Setter
+    @Getter
     @Persisted(key = "attach_tick")
     private long attachTick;
 
+    @Getter
     @Persisted(key = "frozen_cyro_sources")
     private java.util.List<String> frozenCyroSourceKeys = new java.util.ArrayList<>();
 
+    @Getter
     @Persisted(key = "frozen_hydro_sources")
     private java.util.List<String> frozenHydroSourceKeys = new java.util.ArrayList<>();
 
+    @Setter
     private transient StatusContainer container;
+
+    @Getter
+    @Setter
     private transient ElementalHost host;
 
     public ElementalAttachmentInstance(GenshinElement element, AttachmentSource source,
@@ -141,18 +158,6 @@ public class ElementalAttachmentInstance extends StatusInstance {
         c.container = null;
         return c;
     }
-    public void setContainer(StatusContainer container) {
-        this.container = container;
-    }
-
-    /** 记下这条附着挂在哪个宿主上 —— 分离时要用它回调元素钩子。 */
-    public void setHost(ElementalHost host) {
-        this.host = host;
-    }
-
-    public ElementalHost getHost() {
-        return host;
-    }
 
     @Override
     public void onRemove() {
@@ -160,10 +165,6 @@ public class ElementalAttachmentInstance extends StatusInstance {
             host.onElementDetached(element);
         }
     }
-
-    // ========== 覆盖规则 & 消耗 ==========
-
-    /** 覆盖规则：量多则覆盖，设置新 quantity（衰减速率是否替换由 Helper 决定） */
     public void refreshQuantity(float newQuantity) {
         this.unit = newQuantity;
     }
@@ -192,51 +193,27 @@ public class ElementalAttachmentInstance extends StatusInstance {
         if (element == null && elementId != null && !elementId.isEmpty()) {
             String[] parts = elementId.split(":", 2);
             Identifier id = Identifier.fromNamespaceAndPath(parts[0], parts[1]);
-            element = ModRegistries.ELEMENT_REGISTRY.get(id).map(r -> r.value()).orElse(null);
+            element = ModRegistries.ELEMENT_REGISTRY.get(id).map(Holder.Reference::value).orElse(null);
         }
         return element;
     }
-    public AttachmentSource getSource() { return source; }
-    public AttachmentProfile getProfile() { return profile; }
-    public float getUnit() { return unit; }
-    public float getCurrentDecayPerSecond() { return currentDecayPerSecond; }
-    public boolean isPermanent() { return permanent; }
-    /**
-     * 宿主是生物时返回该实体，否则 {@code null}（方块坐标宿主没有实体）。
-     */
+
     public LivingEntity getOwner() { return host == null ? null : host.entity(); }
-    public String getSourceCharacterKey() { return sourceCharacterKey; }
-    public long getAttachTick() { return attachTick; }
 
     private static String resolveElementId(GenshinElement element) {
         Identifier key = ModRegistries.ELEMENT_REGISTRY.getKey(element);
         return key != null ? key.toString() : "elementlib:fysikos";
     }
 
-    // ========== 来源追踪 ==========
-
     public boolean hasSourceCharacter() {
         return sourceCharacterKey != null && !sourceCharacterKey.isEmpty();
     }
 
-    /** 计算附着自然衰减完毕的 tick */
     public long getDecayEndTick() {
         float decay = currentDecayPerSecond;
         if (decay <= 0f) return Long.MAX_VALUE;
         float remainingSeconds = unit / decay;
         return attachTick + (long) (remainingSeconds * 20f);
-    }
-
-    public void setAttachTick(long tick) {
-        this.attachTick = tick;
-    }
-
-    public java.util.List<String> getFrozenCyroSourceKeys() {
-        return frozenCyroSourceKeys;
-    }
-
-    public java.util.List<String> getFrozenHydroSourceKeys() {
-        return frozenHydroSourceKeys;
     }
 
     public void addFrozenCyroSource(String key) {

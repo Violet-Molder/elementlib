@@ -9,8 +9,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /**
  * <b>寒元素</b> —— 冰/冻的附加效果载体。
- *
- * @see com.linweiyun.elementlib.core.system.about.ColdAura
  */
 public class ColdElement extends GenshinElement {
 

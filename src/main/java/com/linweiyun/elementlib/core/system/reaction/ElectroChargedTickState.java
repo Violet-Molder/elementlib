@@ -15,6 +15,7 @@ import com.linweiyun.elementlib.util.log.LogGroup;
 import com.linweiyun.elementlib.util.log.ModLog;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import lombok.Setter;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -26,14 +27,11 @@ import java.util.UUID;
 
 /**
  * 感电的周期结算状态：激活后每 {@value #TICK_INTERVAL} 刻各消耗水雷
- * {@value #CONSUME_PER_TICK} 单位并结算一次电元素伤害，任一方耗尽即停。
  */
 public class ElectroChargedTickState implements IPersistedSerializable {
     public static final Logger LOGGER = ModLog.getLogger(LogGroup.ELEMENT);
     private static final float CONSUME_PER_TICK = 0.4f;
     private static final int TICK_INTERVAL = 20;
-
-    /** 连锁半径（格）。 */
     private static final double CHAIN_RADIUS = 5.0;
 
     @Persisted(key = "ec_active")
@@ -45,6 +43,7 @@ public class ElectroChargedTickState implements IPersistedSerializable {
     @Persisted(key = "ec_attacker_uuid")
     private UUID attackerUUID;
 
+    @Setter
     private transient StatusContainer container;
     private transient LivingEntity targetEntity;
 
@@ -52,10 +51,6 @@ public class ElectroChargedTickState implements IPersistedSerializable {
         this.active = false;
         this.tickCounter = 0;
         this.attackerUUID = null;
-    }
-
-    public void setContainer(StatusContainer container) {
-        this.container = container;
     }
 
     public void onActiveTrigger(@Nullable Entity attacker, LivingEntity target) {
@@ -176,7 +171,6 @@ public class ElectroChargedTickState implements IPersistedSerializable {
                 e -> e != source && e.isAlive() && source.distanceToSqr(e) <= rSq)) {
 
             StatusContainer nc = nearby.getData(ElementalAttachments.CONTAINER);
-            if (nc == null) continue;
 
             ElementalAttachmentInstance h = ElectroChargedReaction.findElement(nc, hydro);
             if (h != null && h.getUnit() > 0) {
@@ -191,7 +185,7 @@ public class ElectroChargedTickState implements IPersistedSerializable {
     @Nullable
     private static ElementalReactionType electroChargedType() {
         DeferredHolder<ElementalReactionType, ElementalReactionType> holder = ModReactionTypes.ELECTRO_CHARGED;
-        return holder != null && holder.isBound() ? holder.get() : null;
+        return holder.isBound() ? holder.get() : null;
     }
 
     @Nullable

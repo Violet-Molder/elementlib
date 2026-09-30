@@ -29,19 +29,11 @@ import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.slf4j.Logger;
 
-/**
- * <b>ElementLib</b> —— 元素体系库主类。
- *
- * <p>元素注册、附着、反应、反应类型、衰减序列（只含元素附着量）、计时计数器、环境（方块）元素附着都在这里自洽运行。
- *
- * <p>验收入口：{@code /elementlib} 命令挂元素、看反应。
- */
 @Mod(ElementLib.MOD_ID)
 public class ElementLib {
 
     public static final String MOD_ID = "elementlib";
 
-    /** 本模组所有日志的总开关（运行期可改）。 */
     public static volatile boolean LOG_ENABLED = true;
 
     public static final Logger LOGGER = ModLog.getLogger(LogGroup.CORE);
@@ -76,7 +68,6 @@ public class ElementLib {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        // 类元素（冻/激/燃/木）的主元素关联必须等所有元素注册完才能设
         event.enqueueWork(() -> {
             ModElements.setupSubElements();
             LOGGER.info("[ElementLib] 已注册元素 {} 个 / 反应 {} 条 / 反应类型 {} 个",
@@ -84,10 +75,7 @@ public class ElementLib {
                     ModRegistries.ELEMENTAL_REACTIONS_REGISTRY.size(),
                     ModRegistries.REACTION_TYPE_REGISTRY.size());
         });
-        // 自定义注册表由 ModRegistries 上的 @EventBusSubscriber 监听 NewRegistryEvent 自行注册
     }
-
-    /** 配置加载完成后，用 Spec 的真实值覆盖早期注册开关。 */
     private void onConfigLoading(ModConfigEvent.Loading event) {
         ElementLibConfig.syncEarlyFlags();
     }

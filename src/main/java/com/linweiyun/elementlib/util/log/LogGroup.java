@@ -1,5 +1,8 @@
 package com.linweiyun.elementlib.util.log;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /** 日志分组：每组一个独立的开关，{@link ModLog} 按组决定这条日志出不出声。 */
 public enum LogGroup {
    COMBAT("战斗（动作 / 伤害 / 目标选择）"),
@@ -12,6 +15,8 @@ public enum LogGroup {
    MIXIN("混入（Mixin）");
 
    private final String label;
+   @Getter
+   @Setter
    private volatile boolean enabled = true;
 
    LogGroup(String label) {
@@ -22,11 +27,4 @@ public enum LogGroup {
       return this.label;
    }
 
-   public boolean isEnabled() {
-      return this.enabled;
-   }
-
-   public void setEnabled(boolean enabled) {
-      this.enabled = enabled;
-   }
 }
