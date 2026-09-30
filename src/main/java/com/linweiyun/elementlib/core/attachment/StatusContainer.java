@@ -6,26 +6,19 @@ import com.linweiyun.elementlib.core.status.StatusInstanceTypes;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
 import com.linweiyun.elementlib.core.system.about.FrozenDecayState;
 import com.linweiyun.elementlib.core.system.reaction.ElectroChargedTickState;
-import com.lowdragmc.lowdraglib2.LDLib2;
-import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.linweiyun.elementlib.util.log.LogGroup;
 import com.linweiyun.elementlib.util.log.ModLog;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.util.ProblemReporter;
-import net.minecraft.world.level.storage.TagValueInput;
-import net.minecraft.world.level.storage.TagValueOutput;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
@@ -146,72 +139,60 @@ public class StatusContainer implements IPersistedSerializable {
         return c;
     }
 
-    // ========== 多态序列化（NBT 路径：ValueOutput/ValueInput） ==========
+    // ========== 多态序列化（NBT 路径） ==========
 
     @Override
-    public void serialize(@NotNull ValueOutput output) {
+    public CompoundTag serializeNBT(@NotNull HolderLookup.Provider provider) {
         beforeSerialize();
         try {
             CompoundTag root = new CompoundTag();
-            HolderLookup.Provider provider = Platform.getFrozenRegistry();
 
-            CompoundTag frozenTag = PersistedParser.serializeNBT(frozenDecayState, provider);
-            root.put("frozen_decay_state", frozenTag);
-
-            CompoundTag ecTickTag = PersistedParser.serializeNBT(electroChargedTickState, provider);
-            root.put("electro_charged_tick_state", ecTickTag);
+            root.put("frozen_decay_state", PersistedParser.serializeNBT(frozenDecayState, provider));
+            root.put("electro_charged_tick_state", PersistedParser.serializeNBT(electroChargedTickState, provider));
 
             ListTag list = new ListTag();
             for (StatusInstance inst : instances) {
-                try (var reporter = new ProblemReporter.ScopedCollector(LDLib2.LOGGER)) {
-                    var elemOut = TagValueOutput.createWithContext(reporter, provider);
-                    inst.serialize(elemOut);
-                    list.add(elemOut.buildResult());
-                }
+                list.add(PersistedParser.serializeNBT(inst, provider));
             }
             root.put("statuses", list);
-
-            output.store(root);
+            return root;
         } finally {
             afterSerialize();
         }
     }
 
     @Override
-    public void deserialize(@NotNull ValueInput input) {
+    public void deserializeNBT(@NotNull HolderLookup.Provider provider, @NotNull CompoundTag root) {
         beforeDeserialize();
         try {
-            CompoundTag root = input.read(MapCodec.assumeMapUnsafe(CompoundTag.CODEC))
-                    .orElse(new CompoundTag());
-            HolderLookup.Provider provider = input.lookup();
-
             if (root.contains("frozen_decay_state")) {
                 frozenDecayState = new FrozenDecayState();
                 PersistedParser.deserializeNBT(
-                        root.getCompound("frozen_decay_state").orElse(new CompoundTag()),
+                        root.getCompound("frozen_decay_state"),
                         frozenDecayState, provider);
             }
 
             if (root.contains("electro_charged_tick_state")) {
                 electroChargedTickState = new ElectroChargedTickState();
                 PersistedParser.deserializeNBT(
-                        root.getCompound("electro_charged_tick_state").orElse(new CompoundTag()),
+                        root.getCompound("electro_charged_tick_state"),
                         electroChargedTickState, provider);
             }
 
             instances = new ArrayList<>();
             if (root.contains("statuses")) {
-                ListTag list = root.getList("statuses").orElse(new ListTag());
-                for (int i = 0; i < list.size(); i++) {
-                    CompoundTag instTag = list.getCompoundOrEmpty(i);
-                    String typeId = instTag.getString("type_id").orElse("");
-                    StatusInstance inst = StatusInstanceTypes.create(typeId);
-                    try (var reporter = new ProblemReporter.ScopedCollector(LDLib2.LOGGER)) {
-                        inst.deserialize(TagValueInput.create(reporter, provider, instTag));
+                    ListTag list = root.getList("statuses", Tag.TAG_COMPOUND);
+                    for (int i = 0; i < list.size(); i++) {
+                        CompoundTag instTag = list.getCompound(i);
+                        String typeId = instTag.getString("type_id");
+                        StatusInstance inst = StatusInstanceTypes.create(typeId);
+                        if (inst == null) {
+                            continue;
+                        }
+                        PersistedParser.deserializeNBT(instTag, inst, provider);
+                        add(inst);
                     }
-                    add(inst);
                 }
-            }
         } finally {
             afterDeserialize();
         }
@@ -223,26 +204,8 @@ public class StatusContainer implements IPersistedSerializable {
     public void writeToBuff(ByteBuf buf) {
         beforeSerialize();
         try {
-            CompoundTag root = new CompoundTag();
-            HolderLookup.Provider provider = Platform.getFrozenRegistry();
-
-            CompoundTag frozenTag = PersistedParser.serializeNBT(frozenDecayState, provider);
-            root.put("frozen_decay_state", frozenTag);
-
-            CompoundTag ecTickTag = PersistedParser.serializeNBT(electroChargedTickState, provider);
-            root.put("electro_charged_tick_state", ecTickTag);
-
-            ListTag list = new ListTag();
-            for (StatusInstance inst : instances) {
-                try (var reporter = new ProblemReporter.ScopedCollector(LDLib2.LOGGER)) {
-                    var elemOut = TagValueOutput.createWithContext(reporter, provider);
-                    inst.serialize(elemOut);
-                    list.add(elemOut.buildResult());
-                }
-            }
-            root.put("statuses", list);
-
-            new FriendlyByteBuf(buf).writeNbt(root);
+            HolderLookup.Provider provider = com.lowdragmc.lowdraglib2.Platform.getFrozenRegistry();
+            new FriendlyByteBuf(buf).writeNbt(serializeNBT(provider));
         } finally {
             afterSerialize();
         }
@@ -253,36 +216,11 @@ public class StatusContainer implements IPersistedSerializable {
         beforeDeserialize();
         try {
             CompoundTag root = new FriendlyByteBuf(buf).readNbt();
-            if (root == null) root = new CompoundTag();
-            HolderLookup.Provider provider = Platform.getFrozenRegistry();
-
-            if (root.contains("frozen_decay_state")) {
-                frozenDecayState = new FrozenDecayState();
-                PersistedParser.deserializeNBT(
-                        root.getCompound("frozen_decay_state").orElse(new CompoundTag()),
-                        frozenDecayState, provider);
+            if (root == null) {
+                root = new CompoundTag();
             }
-
-            if (root.contains("electro_charged_tick_state")) {
-                electroChargedTickState = new ElectroChargedTickState();
-                PersistedParser.deserializeNBT(
-                        root.getCompound("electro_charged_tick_state").orElse(new CompoundTag()),
-                        electroChargedTickState, provider);
-            }
-
-            instances = new ArrayList<>();
-            if (root.contains("statuses")) {
-                ListTag list = root.getList("statuses").orElse(new ListTag());
-                for (int i = 0; i < list.size(); i++) {
-                    CompoundTag instTag = list.getCompoundOrEmpty(i);
-                    String typeId = instTag.getString("type_id").orElse("");
-                    StatusInstance inst = StatusInstanceTypes.create(typeId);
-                    try (var reporter = new ProblemReporter.ScopedCollector(LDLib2.LOGGER)) {
-                        inst.deserialize(TagValueInput.create(reporter, provider, instTag));
-                    }
-                    add(inst);
-                }
-            }
+            HolderLookup.Provider provider = com.lowdragmc.lowdraglib2.Platform.getFrozenRegistry();
+            deserializeNBT(provider, root);
         } finally {
             afterDeserialize();
         }

@@ -6,15 +6,13 @@ import com.linweiyun.elementlib.core.element.GenshinElement;
 import com.linweiyun.elementlib.core.system.reaction.damage.ReactionDamage;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,7 +63,7 @@ public abstract class ElementalAreaEntity extends Entity {
         if (!(level instanceof ServerLevel serverLevel)) {
             return null;
         }
-        T entity = type.create(serverLevel, EntitySpawnReason.EVENT);
+        T entity = type.create(serverLevel);
         if (entity == null) {
             return null;
         }
@@ -207,7 +205,7 @@ public abstract class ElementalAreaEntity extends Entity {
     }
 
     @Override
-    public boolean hurtServer(ServerLevel level, DamageSource source, float damage) {
+    public boolean hurt(DamageSource source, float damage) {
         return false;
     }
 
@@ -216,18 +214,18 @@ public abstract class ElementalAreaEntity extends Entity {
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput input) {
-        this.radius = input.getDoubleOr("el_radius", this.radius);
-        this.durationTicks = input.getIntOr("el_duration", this.durationTicks);
-        this.tickInterval = input.getIntOr("el_tick_interval", this.tickInterval);
-        this.tickDamage = input.getFloatOr("el_tick_damage", this.tickDamage);
-        this.explodeDamage = input.getFloatOr("el_explode_damage", this.explodeDamage);
-        this.expireGameTime = input.getLongOr("el_expire", -1L);
-        this.tickTimer = input.getIntOr("el_tick_timer", 0);
+    public void readAdditionalSaveData(CompoundTag input) {
+        this.radius = input.getDouble("el_radius");
+        this.durationTicks = input.getInt("el_duration");
+        this.tickInterval = input.getInt("el_tick_interval");
+        this.tickDamage = input.getFloat("el_tick_damage");
+        this.explodeDamage = input.getFloat("el_explode_damage");
+        this.expireGameTime = input.getLong("el_expire");
+        this.tickTimer = input.getInt("el_tick_timer");
 
         // 引用不落盘，只留 UUID，重载后按 UUID 重新解析。
         this.owner = null;
-        String ownerId = input.getStringOr("el_owner", "");
+        String ownerId = input.getString("el_owner");
         if (ownerId.isEmpty()) {
             this.ownerUUID = null;
         } else {
@@ -240,7 +238,7 @@ public abstract class ElementalAreaEntity extends Entity {
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    protected void addAdditionalSaveData(CompoundTag output) {
         output.putDouble("el_radius", this.radius);
         output.putInt("el_duration", this.durationTicks);
         output.putInt("el_tick_interval", this.tickInterval);

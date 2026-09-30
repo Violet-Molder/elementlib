@@ -18,7 +18,7 @@ base {
     archivesName = lib_mod_id
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 repositories {
     // LDLib2（唯一外部前置：StatusContainer 的多态序列化用它的 PersistedParser）
@@ -86,10 +86,6 @@ neoForge.ideSyncTask generateModMetadata
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    // 告警源自 toolchain(JBR25) 跑 Lombok 注解处理时用的 Unsafe；给它 direct 一个 allow 关闭 JDK24+ 的告警。
-    // 只能放这里、不能放 gradle.properties 的 jvmargs：后者影响启动 daemon 的 JVM（可能是 JDK21），不认这个 JDK24+ 选项。
-    options.fork = true
-    options.forkOptions.jvmArgs.add('--sun-misc-unsafe-memory-access=allow')
 }
 
 idea {

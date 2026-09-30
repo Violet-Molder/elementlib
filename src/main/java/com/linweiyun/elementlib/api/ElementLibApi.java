@@ -13,7 +13,7 @@ import com.linweiyun.elementlib.core.system.about.host.EntityHost;
 import com.linweiyun.elementlib.core.system.reaction.ElementalReaction;
 import com.linweiyun.elementlib.core.system.reaction.damage.VariantGateHolder;
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -86,11 +86,11 @@ public final class ElementLibApi {
      * @return 元素；未注册或 {@code id} 为 {@code null} 时返回 {@code null}
      */
     @Nullable
-    public static GenshinElement element(Identifier id) {
+    public static GenshinElement element(ResourceLocation id) {
         if (id == null) {
             return null;
         }
-        return ModRegistries.ELEMENT_REGISTRY.get(id).map(holder -> holder.value()).orElse(null);
+        return ModRegistries.ELEMENT_REGISTRY.get(id);
     }
 
     /**
@@ -99,11 +99,11 @@ public final class ElementLibApi {
      * @return 反应类型；未注册或 {@code id} 为 {@code null} 时返回 {@code null}
      */
     @Nullable
-    public static ElementalReactionType reactionType(Identifier id) {
+    public static ElementalReactionType reactionType(ResourceLocation id) {
         if (id == null) {
             return null;
         }
-        return ModRegistries.REACTION_TYPE_REGISTRY.get(id).map(holder -> holder.value()).orElse(null);
+        return ModRegistries.REACTION_TYPE_REGISTRY.get(id);
     }
 
     /** 已注册的全部反应（快照，不可修改）。 */

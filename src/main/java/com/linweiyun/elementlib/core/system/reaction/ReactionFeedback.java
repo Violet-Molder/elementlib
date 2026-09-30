@@ -89,7 +89,7 @@ public final class ReactionFeedback {
         double rSq = BROADCAST_RADIUS * BROADCAST_RADIUS;
         for (ServerPlayer player : level.players()) {
             if (player.distanceToSqr(x, y, z) > rSq) continue;
-            player.sendOverlayMessage(message);
+            player.displayClientMessage(message, true);
         }
     }
 }

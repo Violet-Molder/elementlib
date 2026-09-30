@@ -7,7 +7,7 @@ import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
 import lombok.Getter;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Supplier;
@@ -58,8 +58,8 @@ public abstract class ElementalReaction {
     @Nullable
     private static GenshinElement resolveElement(String id) {
         String[] parts = id.split(":", 2);
-        Identifier identifier = Identifier.fromNamespaceAndPath(parts[0], parts[1]);
-        return ModRegistries.ELEMENT_REGISTRY.get(identifier).map(r -> r.value()).orElse(null);
+        ResourceLocation identifier = ResourceLocation.fromNamespaceAndPath(parts[0], parts[1]);
+        return ModRegistries.ELEMENT_REGISTRY.get(identifier);
     }
     @Nullable
     public ElementalReactionType getReactionType() {

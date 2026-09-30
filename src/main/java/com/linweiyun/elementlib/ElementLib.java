@@ -13,7 +13,7 @@ import com.linweiyun.elementlib.core.system.registry.register.ModReactionTypes;
 import com.linweiyun.elementlib.core.system.registry.register.ModStatusInstanceTypes;
 import com.linweiyun.elementlib.util.log.LogGroup;
 import com.linweiyun.elementlib.util.log.ModLog;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
@@ -80,8 +80,8 @@ public class ElementLib {
         ElementLibConfig.syncEarlyFlags();
     }
 
-    public static Identifier id(String path) {
-        return Identifier.fromNamespaceAndPath(MOD_ID, path);
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
     @SubscribeEvent

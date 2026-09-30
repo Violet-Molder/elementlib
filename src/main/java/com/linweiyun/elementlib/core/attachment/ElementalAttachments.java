@@ -30,7 +30,7 @@ public final class ElementalAttachments {
     public static final Supplier<AttachmentType<ChunkBlockElements>> CHUNK_ELEMENTS =
             ATTACHMENTS.register("chunk_elements",
                     () -> AttachmentType.builder(ChunkBlockElements::new)
-                            .serialize(ChunkBlockElements.CODEC.fieldOf("elements"))
+                            .serialize(ChunkBlockElements.CODEC)
                             .build());
 
     /** 计时计数器管理器（每实体一份，不落存档）。 */

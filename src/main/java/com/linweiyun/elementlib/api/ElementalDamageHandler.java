@@ -30,7 +30,7 @@ public interface ElementalDamageHandler {
         if (target == null || level == null) {
             return;
         }
-        target.hurtServer(level, level.damageSources().magic(), amount);
+        target.hurt(level.damageSources().magic(), amount);
     }
 
     /**

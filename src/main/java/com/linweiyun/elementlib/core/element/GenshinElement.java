@@ -5,7 +5,7 @@ import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
 import lombok.Getter;
 import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
@@ -60,7 +60,7 @@ public class GenshinElement {
     }
 
     public String getId() {
-        Identifier key = ModRegistries.ELEMENT_REGISTRY.getKey(this);
+        ResourceLocation key = ModRegistries.ELEMENT_REGISTRY.getKey(this);
         return key != null ? key.getPath() : "";
     }
 

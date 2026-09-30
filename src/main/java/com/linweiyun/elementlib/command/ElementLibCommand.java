@@ -31,9 +31,9 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -67,7 +67,7 @@ public final class ElementLibCommand {
                 .then(Commands.literal("attach")
                         .then(Commands.argument("element", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
-                                    for (Identifier id : ModRegistries.ELEMENT_REGISTRY.keySet()) {
+                                    for (ResourceLocation id : ModRegistries.ELEMENT_REGISTRY.keySet()) {
                                         builder.suggest(id.getPath());
                                         builder.suggest(id.toString());
                                     }
@@ -118,7 +118,7 @@ public final class ElementLibCommand {
                 .then(Commands.literal("block")
                         .then(Commands.argument("element", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
-                                    for (Identifier id : ModRegistries.ELEMENT_REGISTRY.keySet()) {
+                                    for (ResourceLocation id : ModRegistries.ELEMENT_REGISTRY.keySet()) {
                                         builder.suggest(id.getPath());
                                     }
                                     return builder.buildFuture();
@@ -426,8 +426,8 @@ public final class ElementLibCommand {
 
     private static GenshinElement resolveElement(CommandContext<CommandSourceStack> ctx, String arg) {
         String raw = StringArgumentType.getString(ctx, arg);
-        Identifier id = raw.contains(":") ? Identifier.parse(raw) : ElementLib.id(raw);
-        GenshinElement element = ModRegistries.ELEMENT_REGISTRY.get(id).map(r -> r.value()).orElse(null);
+        ResourceLocation id = raw.contains(":") ? ResourceLocation.parse(raw) : ElementLib.id(raw);
+        GenshinElement element = ModRegistries.ELEMENT_REGISTRY.get(id);
         if (element == null) {
             ctx.getSource().sendFailure(Component.literal("[ElementLib] 未找到元素 '" + raw + "'"));
         }

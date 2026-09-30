@@ -15,13 +15,14 @@ import com.linweiyun.elementlib.core.system.about.host.EntityHost;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import com.linweiyun.elementlib.util.log.LogGroup;
+import com.linweiyun.elementlib.util.log.ModLog;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -30,10 +31,12 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,6 +52,8 @@ import java.util.Set;
  */
 @EventBusSubscriber(value = Dist.CLIENT, modid = ElementLib.MOD_ID)
 public final class ElementAuraIconRenderer {
+
+    private static final Logger LOGGER = ModLog.getLogger(LogGroup.RENDER);
 
     /** 超过这个距离的实体不画（格）。 */
     private static final double MAX_DISTANCE = 24.0;
@@ -79,13 +84,23 @@ public final class ElementAuraIconRenderer {
     /** 每实体复用的待绘图标列表，避免每实体每帧新建集合。 */
     private static final List<AuraIcon> MAIN_ELEMENTS = new ArrayList<>();
 
+    /** 临时调试：只打前 N 帧，避免刷屏。 */
+    private static int debugFrames = 0;
+
     private ElementAuraIconRenderer() {
     }
 
     @SubscribeEvent
-    public static void onSubmitCustomGeometry(SubmitCustomGeometryEvent event) {
+    public static void onRenderLevelStage(RenderLevelStageEvent event) {
         if (!ElementLibConfig.showAuraIcon()) {
             return;
+        }
+        if (event.getStage() != Stage.AFTER_TRANSLUCENT_BLOCKS) {
+            return;
+        }
+
+        if (debugFrames < 60 && (debugFrames % 20 == 0)) {
+            LOGGER.info("[aura-debug] onRenderLevelStage AFTER_TRANSLUCENT_BLOCKS fired");
         }
 
         Minecraft mc = Minecraft.getInstance();
@@ -93,18 +108,19 @@ public final class ElementAuraIconRenderer {
             return;
         }
 
-        SubmitNodeCollector collector = event.getSubmitNodeCollector();
         PoseStack poseStack = event.getPoseStack();
 
-        float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(true);
 
         // 相机在本帧的实体循环里是常量：位置、朝向各取一次就够
-        Camera camera = mc.gameRenderer.mainCamera();
-        Vec3 camPos = camera.position();
+        Camera camera = event.getCamera();
+        Vec3 camPos = camera.getPosition();
         Quaternionf camRot = camera.rotation();
         double camX = camPos.x;
         double camY = camPos.y;
         double camZ = camPos.z;
+
+        MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
 
         for (Entity entity : mc.level.entitiesForRendering()) {
             if (!(entity instanceof LivingEntity living)) continue;
@@ -121,13 +137,19 @@ public final class ElementAuraIconRenderer {
             StatusContainer container = living.getData(ElementalAttachments.CONTAINER);
             if (!collectMainElements(container, living)) continue;
 
+            if (debugFrames < 60 && (debugFrames % 20 == 0)) {
+                LOGGER.info("[aura-debug] entity {} collected {} icons: {}", living.getDisplayName().getString(),
+                        MAIN_ELEMENTS.size(), MAIN_ELEMENTS.stream().map(i -> i.element().getId()).toList());
+            }
+
             poseStack.pushPose();
             poseStack.translate((float) relX, (float) (relY + living.getBbHeight() + Y_OFFSET), (float) relZ);
             poseStack.mulPose(camRot);
             poseStack.mulPose(Axis.YP.rotationDegrees(180.0f));
-            renderIcons(poseStack, collector, mc.level.getGameTime() + (double) partialTick);
+            renderIcons(poseStack, buffers, mc.level.getGameTime() + (double) partialTick);
             poseStack.popPose();
         }
+        if (debugFrames < 60) debugFrames++;
     }
 
     /**
@@ -137,6 +159,14 @@ public final class ElementAuraIconRenderer {
      */
     private static boolean collectMainElements(StatusContainer container, LivingEntity living) {
         MAIN_ELEMENTS.clear();
+
+        // 临时调试：打印客户端容器实际内容，确认数据层
+        if (debugFrames < 30) {
+            List<String> desc = new ArrayList<>();
+            for (StatusInstance inst : container.getAll()) desc.add(inst.getClass().getSimpleName());
+            LOGGER.info("[aura-debug] entity={} container.size={} contents={}",
+                    living.getType().getDescription().getString(), container.getAll().size(), desc);
+        }
 
         ElementalHost host = EntityHost.of(living);
         for (StatusInstance inst : container.getAll()) {
@@ -197,7 +227,7 @@ public final class ElementAuraIconRenderer {
         return -1;
     }
 
-    private static void renderIcons(PoseStack poseStack, SubmitNodeCollector collector, double time) {
+    private static void renderIcons(PoseStack poseStack, MultiBufferSource.BufferSource buffers, double time) {
         int count = MAIN_ELEMENTS.size();
         float totalWidth = count * ICON_SIZE + (count - 1) * ICON_SPACING;
         float startX = -totalWidth / 2.0f;
@@ -208,7 +238,10 @@ public final class ElementAuraIconRenderer {
         for (int i = 0; i < count; i++) {
             AuraIcon icon = MAIN_ELEMENTS.get(i);
             RenderType type = iconType(icon.element());
-            if (type == null) continue;
+            if (type == null) {
+                if (debugFrames < 60) LOGGER.warn("[aura-debug] no RenderType for icon {}", icon.element().getId());
+                continue;
+            }
 
             // 闪烁：低量且当前相位不可见时整帧跳过（保持占位）；可见时恒全亮，不再带 alpha 渐暗
             if (icon.isLow() && !blinkVisible) continue;
@@ -218,12 +251,15 @@ public final class ElementAuraIconRenderer {
             float yTop = ICON_SIZE / 2.0f;
             float yBottom = -ICON_SIZE / 2.0f;
 
-            collector.submitCustomGeometry(poseStack, type, (pose, buffer) ->
-                    drawTexturedQuad(buffer, pose.pose(), 0.0f,
-                            x1, yBottom, x2, yTop,
-                            1.0f, 0.0f, 0.0f, 1.0f,
-                            1.0f, 1.0f, 1.0f, 1.0f));
+            VertexConsumer consumer = buffers.getBuffer(type);
+            drawTexturedQuad(consumer, poseStack.last().pose(), 0.0f,
+                    x1, yBottom, x2, yTop,
+                    1.0f, 0.0f, 0.0f, 1.0f,
+                    1.0f, 1.0f, 1.0f, 1.0f);
         }
+
+        // 把这次画的 batch 一次性提交 GPU
+        buffers.endBatch();
     }
 
     /** 取元素的图标 {@link RenderType}；没有贴图返回 {@code null} 并记进缺失表。 */
@@ -237,7 +273,7 @@ public final class ElementAuraIconRenderer {
             return null;
         }
 
-        Identifier texture = Identifier.fromNamespaceAndPath(
+        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(
                 ElementLib.MOD_ID, "icon/elemental/" + element.getId() + ".png");
 
         ResourceManager resources = Minecraft.getInstance().getResourceManager();
@@ -246,7 +282,7 @@ public final class ElementAuraIconRenderer {
             return null;
         }
 
-        RenderType built = RenderTypes.entityTranslucent(texture);
+        RenderType built = RenderType.entityTranslucent(texture);
         ICON_TYPES.put(element, built);
         return built;
     }

@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.linweiyun.elementlib.mixin.mixins",
-  "compatibilityLevel": "JAVA_25",
+  "compatibilityLevel": "JAVA_21",
   "mixins": [
     "LivingEntityElementalMixin"
   ],

@@ -1,6 +1,6 @@
 package com.linweiyun.elementlib.core.element;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -13,8 +13,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 public class ColdElement extends GenshinElement {
 
     /** 减速修饰符的 id（随实体存进存档，不可改名）。 */
-    private static final Identifier SLOW_MODIFIER_ID =
-            Identifier.fromNamespaceAndPath("elementlib", "cryo_slow");
+    private static final ResourceLocation SLOW_MODIFIER_ID =
+            ResourceLocation.fromNamespaceAndPath("elementlib", "cryo_slow");
 
     /** 减速幅度（-10% 移速）。 */
     private static final float SLOW_AMOUNT = -0.10f;

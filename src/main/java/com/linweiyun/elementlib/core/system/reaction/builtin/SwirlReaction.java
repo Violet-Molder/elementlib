@@ -26,7 +26,7 @@ import com.linweiyun.elementlib.core.system.registry.ModRegistries;
 import com.linweiyun.elementlib.core.system.registry.register.ModReactionTypes;
 import com.linweiyun.elementlib.util.log.LogGroup;
 import com.linweiyun.elementlib.util.log.ModLog;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -182,7 +182,7 @@ public class SwirlReaction extends ElementalReaction {
     }
 
     private static boolean isSwirlable(GenshinElement element) {
-        Identifier key = ModRegistries.ELEMENT_REGISTRY.getKey(element);
+        ResourceLocation key = ModRegistries.ELEMENT_REGISTRY.getKey(element);
         return key != null && SWIRLABLE_IDS.contains(key.toString());
     }
 

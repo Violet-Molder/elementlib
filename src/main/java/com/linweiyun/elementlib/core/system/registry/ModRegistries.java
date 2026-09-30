@@ -6,7 +6,7 @@ import com.linweiyun.elementlib.core.element.GenshinElement;
 import com.linweiyun.elementlib.core.status.StatusInstanceType;
 import com.linweiyun.elementlib.core.system.reaction.ElementalReaction;
 import net.minecraft.core.Registry;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -22,19 +22,19 @@ public class ModRegistries {
 
     public static final ResourceKey<Registry<ElementalReaction>> REACTION_REGISTRY_KEY =
             ResourceKey.createRegistryKey(
-                    Identifier.fromNamespaceAndPath(ElementLib.MOD_ID, "elemental_reactions"));
+                    ResourceLocation.fromNamespaceAndPath(ElementLib.MOD_ID, "elemental_reactions"));
 
     public static final ResourceKey<Registry<StatusInstanceType<?>>> STATUS_INSTANCE_TYPE_REGISTRY_KEY =
             ResourceKey.createRegistryKey(
-                    Identifier.fromNamespaceAndPath(ElementLib.MOD_ID, "status_instance_types"));
+                    ResourceLocation.fromNamespaceAndPath(ElementLib.MOD_ID, "status_instance_types"));
 
     public static final ResourceKey<Registry<GenshinElement>> ELEMENT_REGISTRY_KEY =
             ResourceKey.createRegistryKey(
-                    Identifier.fromNamespaceAndPath(ElementLib.MOD_ID, "elements"));
+                    ResourceLocation.fromNamespaceAndPath(ElementLib.MOD_ID, "elements"));
 
     public static final ResourceKey<Registry<ElementalReactionType>> REACTION_TYPE_REGISTRY_KEY =
             ResourceKey.createRegistryKey(
-                    Identifier.fromNamespaceAndPath(ElementLib.MOD_ID, "reaction_types"));
+                    ResourceLocation.fromNamespaceAndPath(ElementLib.MOD_ID, "reaction_types"));
 
     // ======== 注册表 ========
     public static final Registry<ElementalReaction> ELEMENTAL_REACTIONS_REGISTRY =

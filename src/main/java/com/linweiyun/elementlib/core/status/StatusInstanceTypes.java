@@ -4,7 +4,7 @@ import com.linweiyun.elementlib.ElementLib;
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
 import com.linweiyun.elementlib.util.log.LogGroup;
 import com.linweiyun.elementlib.util.log.ModLog;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 
 /**
@@ -15,7 +15,7 @@ public final class StatusInstanceTypes {
 
     private StatusInstanceTypes() {}
     public static StatusInstance create(String typeId) {
-        Identifier id = typeId.contains(":") ? Identifier.parse(typeId) : ElementLib.id(typeId);
+        ResourceLocation id = typeId.contains(":") ? ResourceLocation.parse(typeId) : ElementLib.id(typeId);
         StatusInstanceType<?> type = ModRegistries.STATUS_INSTANCE_TYPE_REGISTRY.getOptional(id).orElse(null);
         if (type != null && type.constructor() != null) {
             return type.constructor().get();

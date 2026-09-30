@@ -5,7 +5,6 @@ import com.linweiyun.elementlib.core.element.GenshinElement;
 import com.linweiyun.elementlib.core.element.ModElements;
 import com.linweiyun.elementlib.core.system.about.AttachmentSource;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +41,7 @@ public final class AuraIconRules {
         if (hydro != null) {
             // 环境附着的水对水生生物不显示图标。
             // 豁免名单可继续加：复制这一行、换成别的实体类型即可。
-            registerEnvironmentExempt(hydro, EntityTypes.DROWNED);
+            registerEnvironmentExempt(hydro, EntityType.DROWNED);
         }
         ENVIRONMENT_DEFAULT_INSTALLED = hydro != null;
     }

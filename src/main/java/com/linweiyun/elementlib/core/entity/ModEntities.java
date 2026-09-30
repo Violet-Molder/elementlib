@@ -3,8 +3,6 @@ package com.linweiyun.elementlib.core.entity;
 import com.linweiyun.elementlib.ElementLib;
 import com.linweiyun.elementlib.config.ElementLibConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.neoforged.bus.api.IEventBus;
@@ -41,10 +39,7 @@ public final class ModEntities {
                         .sized(1.0F, 1.0F)
                         .clientTrackingRange(8)
                         .updateInterval(20)
-                        .build(ResourceKey.create(
-                                Registries.ENTITY_TYPE,
-                                ElementLib.id("thunder_cloud"))
-                        ));
+                        .build("thunder_cloud"));
     }
 
     private static DeferredHolder<EntityType<?>, EntityType<StellarVortexEntity>> registerStellarVortex() {
@@ -54,10 +49,7 @@ public final class ModEntities {
                         .sized(1.0F, 1.0F)
                         .clientTrackingRange(8)
                         .updateInterval(20)
-                        .build(ResourceKey.create(
-                                Registries.ENTITY_TYPE,
-                                ElementLib.id("stellar_vortex"))
-                        ));
+                        .build("stellar_vortex"));
     }
 
     /** 示范内容关闭时整个注册器不挂到事件总线上。 */

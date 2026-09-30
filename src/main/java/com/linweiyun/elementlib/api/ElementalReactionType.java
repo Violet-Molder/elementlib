@@ -1,7 +1,7 @@
 package com.linweiyun.elementlib.api;
 
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -19,13 +19,13 @@ public final class ElementalReactionType {
 
     /** 注册表 key；实例尚未注册时为 {@code null}。 */
     @Nullable
-    public Identifier getId() {
+    public ResourceLocation getId() {
         return ModRegistries.REACTION_TYPE_REGISTRY.getKey(this);
     }
 
     /** 注册表 key 的 path；尚未注册时为 {@code ""}。 */
     public String getPath() {
-        Identifier id = getId();
+        ResourceLocation id = getId();
         return id != null ? id.getPath() : "";
     }
 

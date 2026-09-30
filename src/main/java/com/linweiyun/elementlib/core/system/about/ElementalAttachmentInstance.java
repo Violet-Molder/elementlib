@@ -12,7 +12,7 @@ import com.linweiyun.elementlib.util.log.ModLog;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import org.slf4j.Logger;
 
@@ -192,8 +192,8 @@ public class ElementalAttachmentInstance extends StatusInstance {
     public GenshinElement getElement() {
         if (element == null && elementId != null && !elementId.isEmpty()) {
             String[] parts = elementId.split(":", 2);
-            Identifier id = Identifier.fromNamespaceAndPath(parts[0], parts[1]);
-            element = ModRegistries.ELEMENT_REGISTRY.get(id).map(Holder.Reference::value).orElse(null);
+            ResourceLocation id = ResourceLocation.fromNamespaceAndPath(parts[0], parts[1]);
+            element = ModRegistries.ELEMENT_REGISTRY.get(id);
         }
         return element;
     }
@@ -201,7 +201,7 @@ public class ElementalAttachmentInstance extends StatusInstance {
     public LivingEntity getOwner() { return host == null ? null : host.entity(); }
 
     private static String resolveElementId(GenshinElement element) {
-        Identifier key = ModRegistries.ELEMENT_REGISTRY.getKey(element);
+        ResourceLocation key = ModRegistries.ELEMENT_REGISTRY.getKey(element);
         return key != null ? key.toString() : "elementlib:fysikos";
     }
 

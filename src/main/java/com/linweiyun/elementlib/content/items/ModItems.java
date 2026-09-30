@@ -5,10 +5,14 @@ import com.linweiyun.elementlib.config.ElementLibConfig;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -26,6 +30,25 @@ public final class ModItems {
     private static final float SWORD_ATTACK_DAMAGE = 3.0F;
     private static final float SWORD_ATTACK_SPEED = -2.4F;
 
+    /** 原版剑攻速/攻速基准 modifier 的固定 id（与原版 SwordItem 一致）。 */
+    private static final ResourceLocation BASE_ATTACK_DAMAGE_ID =
+            ResourceLocation.withDefaultNamespace("generic.attack_damage");
+    private static final ResourceLocation BASE_ATTACK_SPEED_ID =
+            ResourceLocation.withDefaultNamespace("generic.attack_speed");
+
+    /** 元素剑的基础属性：攻击伤害 + 攻速（等效原版铁剑）。 */
+    private static final ItemAttributeModifiers SWORD_ATTRIBUTES =
+            ItemAttributeModifiers.builder()
+                    .add(Attributes.ATTACK_DAMAGE,
+                            new AttributeModifier(BASE_ATTACK_DAMAGE_ID, SWORD_ATTACK_DAMAGE,
+                                    AttributeModifier.Operation.ADD_VALUE),
+                            EquipmentSlotGroup.MAINHAND)
+                    .add(Attributes.ATTACK_SPEED,
+                            new AttributeModifier(BASE_ATTACK_SPEED_ID, SWORD_ATTACK_SPEED,
+                                    AttributeModifier.Operation.ADD_VALUE),
+                            EquipmentSlotGroup.MAINHAND)
+                    .build();
+
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ElementLib.MOD_ID);
 
     public static final DeferredRegister.DataComponents DATA_COMPONENTS =
@@ -35,12 +58,12 @@ public final class ModItems {
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ElementLib.MOD_ID);
 
     /** 元素法杖当前选中的元素 id。 */
-    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Identifier>> WAND_ELEMENT =
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ResourceLocation>> WAND_ELEMENT =
             DATA_COMPONENTS.registerComponentType(
                     "wand_element",
                     builder -> builder
-                            .persistent(Identifier.CODEC)
-                            .networkSynchronized(Identifier.STREAM_CODEC)
+                            .persistent(ResourceLocation.CODEC)
+                            .networkSynchronized(ResourceLocation.STREAM_CODEC)
             );
 
     public static final DeferredItem<ElementWandItem> ELEMENT_WAND =
@@ -98,7 +121,7 @@ public final class ModItems {
         return ITEMS.registerItem(
                 elementPath + "_sword",
                 props -> new ElementSwordItem(props, ElementLib.MOD_ID + ":" + elementPath),
-                props -> props.sword(ToolMaterial.IRON, SWORD_ATTACK_DAMAGE, SWORD_ATTACK_SPEED));
+                new Item.Properties().attributes(SWORD_ATTRIBUTES));
     }
 
     public static void register(IEventBus modEventBus) {
@@ -112,7 +135,7 @@ public final class ModItems {
 
     /** 法杖元素数据组件类型；未注册时为 {@code null}。 */
     @Nullable
-    public static DataComponentType<Identifier> wandElementType() {
+    public static DataComponentType<ResourceLocation> wandElementType() {
         return WAND_ELEMENT.isBound() ? WAND_ELEMENT.get() : null;
     }
 }

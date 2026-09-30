@@ -56,7 +56,7 @@ public final class BlockHost implements ElementalHost {
 
     @Override
     public String hostKey() {
-        return "block:" + level.dimension().identifier() + "@" + pos.asLong();
+        return "block:" + level.dimension().location() + "@" + pos.asLong();
     }
 
     @Override
