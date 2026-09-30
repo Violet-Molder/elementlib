@@ -1,0 +1,95 @@
+plugins {
+    id 'java-library'
+    // 版本在 settings.gradle 的 pluginManagement 里统一声明，这里不带 version。
+    id 'net.neoforged.moddev'
+    id 'idea'
+}
+
+def lib_mod_id = mod_id
+def lib_mod_name = mod_name
+def lib_mod_license = mod_license
+def lib_mod_version = mod_version
+def lib_group_id = mod_group_id
+
+version = lib_mod_version
+group = lib_group_id
+
+base {
+    archivesName = lib_mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+repositories {
+    // LDLib2（唯一外部前置：StatusContainer 的多态序列化用它的 PersistedParser）
+    maven { url = "https://maven.firstdark.dev/snapshots" }
+}
+
+dependencies {
+    implementation("com.lowdragmc.ldlib2:ldlib2-neoforge-${minecraft_version}:${ldlib2_version}")
+    compileOnly "org.projectlombok:lombok:1.18.38"
+    annotationProcessor "org.projectlombok:lombok:1.18.38"
+}
+
+neoForge {
+    version = project.neo_version
+
+    // 独立运行配置：gradlew runClient 只加载 elementlib，可单独进游戏测反应。
+    runs {
+        client {
+            client()
+            jvmArgument('-Dstdout.encoding=UTF-8\n' +
+                    '-Dstderr.encoding=UTF-8\n' +
+                    '-XX:+AllowEnhancedClassRedefinition')
+            systemProperty 'neoforge.modLoadingWarningScreen.skip', 'true'
+            systemProperty 'neoforge.enabledGameTestNamespaces', lib_mod_id
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', lib_mod_id
+        }
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${lib_mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+// 把 templates/META-INF/neoforge.mods.toml 展开成最终的 mod 元数据
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    // 模板是 UTF-8 编码，Windows 默认字符集是本地（GBK），必须显式指定，否则中文 description 会乱码。
+    filteringCharset = 'UTF-8'
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            mod_id                 : lib_mod_id,
+            mod_name               : lib_mod_name,
+            mod_license            : lib_mod_license,
+            mod_version            : lib_mod_version,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}

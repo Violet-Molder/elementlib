@@ -1,0 +1,181 @@
+package com.linweiyun.elementlib.api;
+
+import com.linweiyun.elementlib.core.attachment.ElementalAttachments;
+import com.linweiyun.elementlib.core.attachment.StatusContainer;
+import com.linweiyun.elementlib.core.element.GenshinElement;
+import com.linweiyun.elementlib.core.system.about.AttachContext;
+import com.linweiyun.elementlib.core.system.about.AttachResult;
+import com.linweiyun.elementlib.core.system.about.AttachmentProfile;
+import com.linweiyun.elementlib.core.system.about.AttachmentSource;
+import com.linweiyun.elementlib.core.system.about.ElementalAttachmentHelper;
+import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
+import com.linweiyun.elementlib.core.system.about.host.EntityHost;
+import com.linweiyun.elementlib.core.system.reaction.ElementalReaction;
+import com.linweiyun.elementlib.core.system.reaction.damage.VariantGateHolder;
+import com.linweiyun.elementlib.core.system.registry.ModRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.LivingEntity;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.stream.StreamSupport;
+
+/**
+ * ElementLib 对外门面：附着、消耗、查询，以及伤害处理器 / 变体门 / 图标总闸三个扩展点。
+ *
+ * <pre>{@code
+ * // 给目标挂 1U 火，附着内部会自动尝试反应
+ * GenshinElement pyro = ModElements.of(ModElements.PYRO);
+ * AttachResult result = ElementLibApi.attach(target, pyro,
+ *         AttachmentSource.NORMAL_ATTACK, AttachmentProfile.WEAK);
+ * if (result.reacted()) {
+ *     float multiplier = result.reaction().getAmplifyMultiplier();   // 融化 / 蒸发的增幅倍率
+ * }
+ *
+ * // 把伤害计算与结算换成自己的管线
+ * ElementLibApi.setDamageHandler(new ElementalDamageHandler() {
+ *     @Override public float computeDamage(ElementalDamageContext ctx) { return myFormula(ctx); }
+ *     @Override public void dealDamage(ElementalDamageContext ctx, float amount) { myPipeline(ctx, amount); }
+ * });
+ *
+ * // 星体系 / 月感电的变体开关换成真实判定
+ * ElementLibApi.setVariantGate(new ReactionVariantGate() {
+ *     @Override public boolean stellarSwirl(Entity attacker, LivingEntity target) { return myCheck(); }
+ *     @Override public boolean stellarConduce(Entity attacker, LivingEntity target) { return false; }
+ *     @Override public boolean lunarCharged(Entity attacker, LivingEntity target) { return false; }
+ * });
+ * }</pre>
+ */
+public final class ElementLibApi {
+
+    private static volatile boolean auraIconVisible = true;
+
+    private ElementLibApi() {
+    }
+
+    // ==================== 附着 ====================
+
+    /**
+     * 给宿主挂元素（无上下文），并在附着内部尝试反应。
+     *
+     * @return 附着结果；参数为空或宿主拒收时返回 {@link AttachResult#REJECTED}
+     */
+    public static AttachResult attach(ElementalHost host, GenshinElement element,
+                                      AttachmentSource source, AttachmentProfile profile) {
+        return attach(host, element, source, profile, AttachContext.ENVIRONMENT);
+    }
+
+    /** 给宿主挂元素（带上下文，攻击型附着用 {@link AttachContext#attack}）。 */
+    public static AttachResult attach(ElementalHost host, GenshinElement element,
+                                      AttachmentSource source, AttachmentProfile profile, AttachContext ctx) {
+        if (host == null || element == null || source == null || profile == null) {
+            return AttachResult.REJECTED;
+        }
+        return ElementalAttachmentHelper.attach(host, element, source, profile, ctx);
+    }
+
+    /** 给生物实体挂元素，容器即实体身上的状态容器。 */
+    public static AttachResult attach(LivingEntity target, GenshinElement element,
+                                      AttachmentSource source, AttachmentProfile profile) {
+        if (target == null || element == null || source == null || profile == null) {
+            return AttachResult.REJECTED;
+        }
+        return ElementalAttachmentHelper.attach(EntityHost.of(target), element, source, profile);
+    }
+
+    /**
+     * 从容器里消耗指定元素的附着量。
+     *
+     * @return 实际消耗量；容器为空时为 {@code 0}
+     */
+    public static float consume(StatusContainer container, GenshinElement element, float amount) {
+        return ElementalAttachmentHelper.consume(container, element, amount);
+    }
+
+    // ==================== 查询 ====================
+
+    /**
+     * 生物身上的元素状态容器。
+     *
+     * @return 容器；{@code entity} 为 {@code null} 时返回 {@code null}
+     */
+    public static StatusContainer container(LivingEntity entity) {
+        return entity == null ? null : ElementalAttachments.container(entity);
+    }
+
+    /**
+     * 按 id 查元素。
+     *
+     * @return 元素；未注册或 {@code id} 为 {@code null} 时返回 {@code null}
+     */
+    @Nullable
+    public static GenshinElement element(Identifier id) {
+        if (id == null) {
+            return null;
+        }
+        return ModRegistries.ELEMENT_REGISTRY.get(id).map(holder -> holder.value()).orElse(null);
+    }
+
+    /**
+     * 按 id 查反应类型。
+     *
+     * @return 反应类型；未注册或 {@code id} 为 {@code null} 时返回 {@code null}
+     */
+    @Nullable
+    public static ElementalReactionType reactionType(Identifier id) {
+        if (id == null) {
+            return null;
+        }
+        return ModRegistries.REACTION_TYPE_REGISTRY.get(id).map(holder -> holder.value()).orElse(null);
+    }
+
+    /** 已注册的全部反应（快照，不可修改）。 */
+    public static List<ElementalReaction> reactions() {
+        return StreamSupport.stream(ModRegistries.ELEMENTAL_REACTIONS_REGISTRY.spliterator(), false).toList();
+    }
+
+    /** 已注册的全部反应类型（快照，不可修改）。 */
+    public static List<ElementalReactionType> reactionTypes() {
+        return StreamSupport.stream(ModRegistries.REACTION_TYPE_REGISTRY.spliterator(), false).toList();
+    }
+
+    // ==================== 扩展点 ====================
+
+    /**
+     * 换掉伤害处理器。
+     *
+     * @param handler 新处理器；传 {@code null} 恢复默认处理器
+     */
+    public static void setDamageHandler(ElementalDamageHandler handler) {
+        VariantGateHolder.setDamageHandler(handler);
+    }
+
+    /** 当前的伤害处理器，永不为 {@code null}。 */
+    public static ElementalDamageHandler damageHandler() {
+        return VariantGateHolder.damageHandler();
+    }
+
+    /**
+     * 换掉星体系 / 月感电的变体门。
+     *
+     * @param gate 新门；传 {@code null} 恢复读 {@link DemoContentToggles} 的默认门
+     */
+    public static void setVariantGate(ReactionVariantGate gate) {
+        VariantGateHolder.setGate(gate);
+    }
+
+    /** 当前的变体门，永不为 {@code null}。 */
+    public static ReactionVariantGate variantGate() {
+        return VariantGateHolder.gate();
+    }
+
+    /** 元素附着图标总闸；关掉后不显示任何附着图标。 */
+    public static void setAuraIconVisible(boolean visible) {
+        auraIconVisible = visible;
+    }
+
+    /** 元素附着图标总闸当前状态。 */
+    public static boolean auraIconVisible() {
+        return auraIconVisible;
+    }
+}

@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "elementlib:pyro_sword",
+    "elementlib:hydro_sword",
+    "elementlib:electro_sword",
+    "elementlib:cyro_sword",
+    "elementlib:anemo_sword",
+    "elementlib:dendro_sword",
+    "elementlib:geo_sword"
+  ]
+}
