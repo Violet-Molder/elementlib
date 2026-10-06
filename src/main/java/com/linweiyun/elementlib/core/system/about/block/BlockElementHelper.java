@@ -5,6 +5,7 @@ import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.api.EnvironmentAttachTarget;
 import com.linweiyun.elementlib.core.attachment.ElementalAttachments;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
+import com.linweiyun.elementlib.core.system.about.AttachResult;
 import com.linweiyun.elementlib.core.element.GenshinElement;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.AttachmentProfile;
@@ -30,6 +31,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +44,25 @@ import java.util.concurrent.ConcurrentHashMap;
  * 取不到元素就跳过。
  */
 public final class BlockElementHelper {
+
+    /** 本 game tick 已经吃过某个元素的格子；防止同一刻多条入口重复附着。 */
+    private static final Map<String, Long> APPLIED_THIS_TICK = new HashMap<>();
+    private static long appliedTick = Long.MIN_VALUE;
+
+    private static boolean alreadyApplied(ServerLevel level, BlockPos pos, GenshinElement element) {
+        long now = level.getGameTime();
+        if (now != appliedTick) {
+            APPLIED_THIS_TICK.clear();
+            appliedTick = now;
+        }
+        String key = level.dimension().identifier() + "@" + pos.asLong() + "#" + element.getId();
+        Long last = APPLIED_THIS_TICK.get(key);
+        if (last != null && last == now) {
+            return true;
+        }
+        APPLIED_THIS_TICK.put(key, now);
+        return false;
+    }
 
     public static final Logger LOGGER = ModLog.getLogger(LogGroup.ELEMENT);
 
@@ -60,37 +83,48 @@ public final class BlockElementHelper {
     public static void applyElement(ServerLevel level, BlockPos pos,
                                     GenshinElement element,
                                     float gauge, float decayPerSec) {
+        applyElementAndGet(level, pos, element, gauge, decayPerSec);
+    }
+
+    /** 与 {@link #applyElement} 同一套行为（含落盘与方块表现迁移），返回这次附着的结果。 */
+    public static AttachResult applyElementAndGet(ServerLevel level, BlockPos pos,
+                                                  GenshinElement element,
+                                                  float gauge, float decayPerSec) {
         if (level == null || pos == null || element == null || gauge <= 0f) {
-            return;
+            return AttachResult.REJECTED;
         }
         BlockHost host = BlockHost.of(level, pos);
         if (host == null || !host.isValid()) {
-            return;
+            return AttachResult.REJECTED;
         }
 
         // 零分配预筛：这个方块对这个元素压根不感兴趣 → 连容器都不建、不落盘。
         if (!BlockElementRules.accepts(host.state(), element)) {
-            return;
+            return AttachResult.REJECTED;
+        }
+        if (alreadyApplied(level, pos, element)) {
+            return AttachResult.REJECTED;
         }
 
         StatusContainer container = host.container();
         if (container == null) {
-            return;
+            return AttachResult.REJECTED;
         }
 
         AttachmentProfile profile = new AttachmentProfile(gauge, 1.0f, decayPerSec, 999f);
 
         // 附着 —— 入口内部会接着尝试反应（与实体端同一套）
-        boolean attached = ElementalAttachmentHelper.attach(
-                host, element, AttachmentSource.ENVIRONMENTAL, profile).attached();
-        if (!attached) {
+        AttachResult result = ElementalAttachmentHelper.attach(
+                host, element, AttachmentSource.ENVIRONMENTAL, profile);
+        if (!result.attached()) {
             // 没挂上就什么都不落：不提交、也不跑迁移（否则「冰族没冰就化水」的规则会把误触当融化）
-            return;
+            return result;
         }
 
         // 落盘 + 让方块状态跟上
         host.commit(container);
         migrateBlockState(host, container);
+        return result;
     }
 
     /** 方块表现迁移 —— 交给 {@link BlockElementMigrations} 注册表。 */

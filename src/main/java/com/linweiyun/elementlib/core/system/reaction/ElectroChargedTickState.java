@@ -172,7 +172,8 @@ public class ElectroChargedTickState implements IPersistedSerializable {
                 source.getBoundingBox().inflate(CHAIN_RADIUS),
                 e -> e != source && e.isAlive() && source.distanceToSqr(e) <= rSq)) {
 
-            StatusContainer nc = nearby.getData(ElementalAttachments.CONTAINER);
+            StatusContainer nc = ElementalAttachments.peekContainer(nearby);
+            if (nc == null) continue;
 
             ElementalAttachmentInstance h = ElectroChargedReaction.findElement(nc, hydro);
             if (h != null && h.getUnit() > 0) {

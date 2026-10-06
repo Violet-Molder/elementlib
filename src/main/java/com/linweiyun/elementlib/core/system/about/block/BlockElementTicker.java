@@ -1,7 +1,8 @@
 package com.linweiyun.elementlib.core.system.about.block;
 
 import com.linweiyun.elementlib.ElementLib;
-import com.linweiyun.elementlib.core.attachment.ElementalAttachments;
+import com.linweiyun.elementlib.core.attachment.ElibModuleAttachments;
+import com.linweiyun.elementlib.core.module.ElibModuleTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -33,12 +34,16 @@ public final class BlockElementTicker {
     public static void onChunkLoad(ChunkEvent.Load event) {
         if (!(event.getLevel() instanceof ServerLevel level)
                 || !(event.getChunk() instanceof LevelChunk chunk)
-                || !chunk.hasData(ElementalAttachments.CHUNK_ELEMENTS)) {
+                || !chunk.hasData(ElibModuleAttachments.CHUNK_MODULES.get())) {
             return;
         }
-        var data = chunk.getData(ElementalAttachments.CHUNK_ELEMENTS);
-        for (var entry : data.getContainers().entrySet()) {
-            if (entry.getValue() == null || entry.getValue().isEmpty()) {
+        var data = chunk.getData(ElibModuleAttachments.CHUNK_MODULES);
+        for (var entry : data.getPersistent().entrySet()) {
+            var container = entry.getValue();
+            if (container == null || container.isEmpty()) {
+                continue;
+            }
+            if (container.get(ElibModuleTypes.ELEMENT) == null) {
                 continue;
             }
             BlockPos pos = BlockPos.of(entry.getKey());

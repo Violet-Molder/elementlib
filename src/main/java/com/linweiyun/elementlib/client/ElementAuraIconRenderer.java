@@ -118,7 +118,8 @@ public final class ElementAuraIconRenderer {
             double distance = Math.sqrt(relX * relX + relY * relY + relZ * relZ);
             if (distance > MAX_DISTANCE) continue;
 
-            StatusContainer container = living.getData(ElementalAttachments.CONTAINER);
+            StatusContainer container = ElementalAttachments.peekContainer(living);
+            if (container == null) continue;
             if (!collectMainElements(container, living)) continue;
 
             poseStack.pushPose();

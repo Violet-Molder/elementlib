@@ -2,6 +2,8 @@ package com.linweiyun.elementlib.core.system.about.host;
 
 import com.linweiyun.elementlib.core.attachment.ElementalAttachments;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
+import com.linweiyun.elementlib.core.module.ElibModuleHosts;
+import com.linweiyun.elementlib.core.module.ElibModuleTypes;
 import com.linweiyun.elementlib.core.element.GenshinElement;
 import com.linweiyun.elementlib.core.system.about.AttachmentProfile;
 import com.linweiyun.elementlib.core.system.about.AttachmentSource;
@@ -33,7 +35,11 @@ public final class EntityHost implements ElementalHost {
 
     @Override
     public StatusContainer container() {
-        return isValid() ? entity.getData(ElementalAttachments.CONTAINER) : null;
+        if (!isValid()) {
+            return null;
+        }
+        var host = ElibModuleHosts.of(entity);
+        return host == null ? null : host.ensure(ElibModuleTypes.ELEMENT);
     }
 
     @Override

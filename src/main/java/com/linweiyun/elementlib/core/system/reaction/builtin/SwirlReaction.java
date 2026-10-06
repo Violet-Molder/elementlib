@@ -235,7 +235,7 @@ public class SwirlReaction extends ElementalReaction {
 
             ReactionFeedback.reaction(nearby, type(), spreadElement);
 
-            StatusContainer nearbyContainer = ElementalAttachments.container(nearby);
+            StatusContainer nearbyContainer = ElementalAttachments.peekContainer(nearby);
             if (nearbyContainer == null) continue;
 
             EntityHost nearbyHost = EntityHost.of(nearby);
