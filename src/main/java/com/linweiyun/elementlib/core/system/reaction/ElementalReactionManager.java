@@ -4,7 +4,7 @@ import com.linweiyun.elementlib.api.ElementalReactionType;
 import com.linweiyun.elementlib.api.ReactionCategory;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.GenshinElement;
-import com.linweiyun.elementlib.core.element.ModElements;
+import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentHelper;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
@@ -41,7 +41,7 @@ public class ElementalReactionManager {
             if (inst.isFinished()) continue;
             if (!(inst instanceof ElementalAttachmentInstance ea)) continue;
             if (ea.getElement().isInstant()) continue;
-            if (ModElements.is(ea.getElement(), ModElements.FYSIKOS)) continue;
+            if (ElementRoles.is(ea.getElement(), ElementRoles.FYSIKOS)) continue;
 
             GenshinElement defenderMain = ea.getElement().getMainElement();
             if (defenderMain == null) continue;
@@ -97,6 +97,7 @@ public class ElementalReactionManager {
                     remainingAttackerQty,
                     context.attackerSource(),
                     context.attackerProfile(),
+                    context.sourceKey(),
                     context.attackerEntity(),
                     context.targetContainer(),
                     context.targetEntity(),
@@ -150,7 +151,7 @@ public class ElementalReactionManager {
             if (!(inst instanceof ElementalAttachmentInstance ea)) continue;
             GenshinElement defMain = ea.getElement().getMainElement();
             if (defMain == attackerMain) continue;
-            if (ModElements.is(ea.getElement(), ModElements.FYSIKOS)) continue;
+            if (ElementRoles.is(ea.getElement(), ElementRoles.FYSIKOS)) continue;
             if (ea.getElement().isInstant()) continue;
             result.add(ea);
         }

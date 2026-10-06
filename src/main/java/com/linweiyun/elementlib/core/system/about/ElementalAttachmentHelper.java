@@ -125,9 +125,6 @@ public class ElementalAttachmentHelper {
             return AttachResult.REJECTED;
         }
         if (react) {
-            if (element.allowsDirectAttachment()) {
-                return AttachResult.REJECTED;
-            }
             if (element.isInstant()) {
                 if (!ElementalReactionManager.canElementReact(element, container, host)) {
                     return AttachResult.REJECTED;
@@ -197,6 +194,7 @@ public class ElementalAttachmentHelper {
         float reactionUnit = ctx.reactionUnit() != null ? ctx.reactionUnit() : actualQuantity;
         ReactionContext reactionContext = new ReactionContext(
                 element, reactionUnit, source, profile,
+                ctx.sourceKey(),
                 ctx.attackerEntity(),
                 container, host == null ? null : host.entity(), host);
         return new AttachResult(true, ElementalReactionManager.tryReactFor(host, reactionContext));

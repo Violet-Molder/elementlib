@@ -2,10 +2,9 @@ package com.linweiyun.elementlib.core.system.reaction;
 
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.GenshinElement;
-import com.linweiyun.elementlib.core.element.ModElements;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import com.linweiyun.elementlib.api.ElementRoles;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -18,10 +17,10 @@ public final class ReactionPriorityCalculator {
     /** 未登记在默认顺序表里的主元素统一排到最后（比表内任何下标都大）。 */
     public static final int UNKNOWN_PRIORITY = 50;
 
-    private static final List<DeferredHolder<GenshinElement, ? extends GenshinElement>> DEFAULT_ORDER = List.of(
-            ModElements.ANEMO, ModElements.CYRO, ModElements.ELECTRO,
-            ModElements.HYDRO, ModElements.FROZEN, ModElements.PYRO,
-            ModElements.DENDRO, ModElements.AGGRAVATE, ModElements.GEO);
+    private static final List<String> DEFAULT_ORDER = List.of(
+            ElementRoles.ANEMO, ElementRoles.CYRO, ElementRoles.ELECTRO,
+            ElementRoles.HYDRO, ElementRoles.FROZEN, ElementRoles.PYRO,
+            ElementRoles.DENDRO, ElementRoles.AGGRAVATE, ElementRoles.GEO);
 
     private ReactionPriorityCalculator() {
     }
@@ -37,7 +36,7 @@ public final class ReactionPriorityCalculator {
             return UNKNOWN_PRIORITY;
         }
         for (int i = 0; i < DEFAULT_ORDER.size(); i++) {
-            if (ModElements.is(mainElement, DEFAULT_ORDER.get(i))) return i;
+            if (ElementRoles.is(mainElement, DEFAULT_ORDER.get(i))) return i;
         }
         return UNKNOWN_PRIORITY;
     }
@@ -46,7 +45,7 @@ public final class ReactionPriorityCalculator {
         for (StatusInstance inst : container.getAll()) {
             if (inst.isFinished()) continue;
             if (inst instanceof ElementalAttachmentInstance ea
-                    && ModElements.is(ea.getElement(), ModElements.FROZEN)) return true;
+                    && ElementRoles.is(ea.getElement(), ElementRoles.FROZEN)) return true;
         }
         return false;
     }
@@ -55,7 +54,7 @@ public final class ReactionPriorityCalculator {
         for (StatusInstance inst : container.getAll()) {
             if (inst.isFinished()) continue;
             if (inst instanceof ElementalAttachmentInstance ea
-                    && ModElements.is(ea.getElement(), ModElements.AGGRAVATE)) return true;
+                    && ElementRoles.is(ea.getElement(), ElementRoles.AGGRAVATE)) return true;
         }
         return false;
     }

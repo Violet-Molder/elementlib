@@ -7,6 +7,7 @@ import com.linweiyun.elementlib.core.system.about.AttachmentSource;
 import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * 反应执行上下文 —— 携带一次元素反应需要的全部环境数据
@@ -22,6 +23,7 @@ import net.minecraft.world.entity.LivingEntity;
  */
 public record ReactionContext(GenshinElement attackerElement, float attackerUnit,
                               AttachmentSource attackerSource, AttachmentProfile attackerProfile,
+                              @Nullable String sourceKey,
                               Entity attackerEntity,
                               StatusContainer targetContainer, LivingEntity targetEntity,
                               ElementalHost targetHost) {

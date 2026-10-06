@@ -2,7 +2,7 @@ package com.linweiyun.elementlib.core.system.about;
 
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.GenshinElement;
-import com.linweiyun.elementlib.core.element.ModElements;
+import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
 import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
@@ -121,7 +121,7 @@ public class ElementalAttachmentInstance extends StatusInstance {
         }
         float effectiveDecayPerSecond;
         GenshinElement e = getElement();
-        if (ModElements.is(e, ModElements.FROZEN)
+        if (ElementRoles.is(e, ElementRoles.FROZEN)
                 && container != null
                 && container.getFrozenDecayState() != null) {
             effectiveDecayPerSecond = container.getFrozenDecayState().getCurrentDecayRate();

@@ -1,6 +1,8 @@
 package com.linweiyun.elementlib.core.system.reaction;
 
 import com.linweiyun.elementlib.api.ElementalReactionType;
+import com.linweiyun.elementlib.api.ElementLibApi;
+import com.linweiyun.elementlib.api.ReactionFeedbackHandler;
 import com.linweiyun.elementlib.core.element.GenshinElement;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
@@ -37,6 +39,11 @@ public final class ReactionFeedback {
      */
     public static void reaction(@Nullable LivingEntity target, @Nullable ElementalReactionType type,
                                 @Nullable GenshinElement element) {
+        ReactionFeedbackHandler handler = ElementLibApi.feedbackHandler();
+        if (handler != null) {
+            handler.reaction(target, type, element);
+            return;
+        }
         if (target == null || type == null) return;
         if (!(target.level() instanceof ServerLevel level)) return;
 
@@ -46,6 +53,11 @@ public final class ReactionFeedback {
     }
     public static void transformative(@Nullable LivingEntity target, @Nullable ElementalReactionType type,
                                       @Nullable GenshinElement element) {
+        ReactionFeedbackHandler handler = ElementLibApi.feedbackHandler();
+        if (handler != null) {
+            handler.transformative(target, type, element);
+            return;
+        }
         if (target == null || type == null) return;
         if (!(target.level() instanceof ServerLevel level)) return;
 
@@ -59,6 +71,11 @@ public final class ReactionFeedback {
     }
     public static void atBlock(@Nullable ServerLevel level, @Nullable BlockPos pos,
                                @Nullable ElementalReactionType type) {
+        ReactionFeedbackHandler handler = ElementLibApi.feedbackHandler();
+        if (handler != null) {
+            handler.atBlock(level, pos, type);
+            return;
+        }
         if (level == null || pos == null || type == null) return;
 
         double x = pos.getX() + 0.5;

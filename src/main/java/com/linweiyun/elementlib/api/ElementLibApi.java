@@ -27,6 +27,12 @@ public final class ElementLibApi {
 
     private static volatile boolean auraIconVisible = true;
 
+    private static volatile ReactionFeedbackHandler feedbackHandler;
+
+    private static volatile ElementalTickListener tickListener;
+
+    private static volatile EnvironmentAttachTarget environmentTarget;
+
     private ElementLibApi() {
     }
 
@@ -154,5 +160,36 @@ public final class ElementLibApi {
     /** 元素附着图标总闸当前状态。 */
     public static boolean auraIconVisible() {
         return auraIconVisible;
+    }
+
+    /** 换掉反应表现出口；传 {@code null} 恢复库自带的粒子 + 文案。 */
+    public static void setFeedbackHandler(@Nullable ReactionFeedbackHandler handler) {
+        feedbackHandler = handler;
+    }
+
+    /** 当前的反应表现出口；未替换时为 {@code null}。 */
+    @Nullable
+    public static ReactionFeedbackHandler feedbackHandler() {
+        return feedbackHandler;
+    }
+
+    /** 元素状态每 tick 之后的回调；传 {@code null} 清除。 */
+    public static void setTickListener(@Nullable ElementalTickListener listener) {
+        tickListener = listener;
+    }
+
+    @Nullable
+    public static ElementalTickListener tickListener() {
+        return tickListener;
+    }
+
+    /** 环境附着的宿主出口；传 {@code null} 恢复「挂到实体自己」。 */
+    public static void setEnvironmentTarget(@Nullable EnvironmentAttachTarget target) {
+        environmentTarget = target;
+    }
+
+    @Nullable
+    public static EnvironmentAttachTarget environmentTarget() {
+        return environmentTarget;
     }
 }

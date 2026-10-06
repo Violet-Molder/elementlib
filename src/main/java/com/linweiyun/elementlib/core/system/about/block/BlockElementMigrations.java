@@ -1,16 +1,14 @@
 package com.linweiyun.elementlib.core.system.about.block;
 
-import com.linweiyun.elementlib.config.ElementLibConfig;
+import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.GenshinElement;
-import com.linweiyun.elementlib.core.element.ModElements;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
 import com.linweiyun.elementlib.core.system.about.host.BlockHost;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.neoforged.neoforge.registries.DeferredHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,41 +58,38 @@ public final class BlockElementMigrations {
     // ==================== 内置：水与冰族 ====================
 
     static {
-        if (ElementLibConfig.demoElementsEnabled()) {
-            // 水 + 冻元素 → 浮冰
-            register(state -> state.is(Blocks.WATER),
-                    (host, container) -> {
-                        if (hasElement(container, ModElements.FROZEN)) {
-                            // 记住冻之前的水位：化回来要还原成「原来的水」，不是完整水方块
-                            BlockElementStore.putWaterLevel(host.level(), host.blockPos(),
-                                    host.state().getValue(BlockStateProperties.LEVEL));
-                            host.level().setBlock(host.blockPos(),
-                                    Blocks.FROSTED_ICE.defaultBlockState(), 3);
-                            host.level().scheduleTick(host.blockPos(), Blocks.FROSTED_ICE, 1);
-                            BlockElementHelper.trackFrozen(host.level(), host.blockPos());
-                        }
-                    },
-                    "minecraft:water");
+        // 水 + 冻元素 → 浮冰
+        register(state -> state.is(Blocks.WATER),
+                (host, container) -> {
+                    if (hasElement(container, ElementRoles.FROZEN)) {
+                        // 记住冻之前的水位：化回来要还原成「原来的水」，不是完整水方块
+                        BlockElementStore.putWaterLevel(host.level(), host.blockPos(),
+                                host.state().getValue(BlockStateProperties.LEVEL));
+                        host.level().setBlock(host.blockPos(),
+                                Blocks.FROSTED_ICE.defaultBlockState(), 3);
+                        host.level().scheduleTick(host.blockPos(), Blocks.FROSTED_ICE, 1);
+                        BlockElementHelper.trackFrozen(host.level(), host.blockPos());
+                    }
+                },
+                "minecraft:water");
 
-            // 冰族没了冻 → 化回水
-            register(BlockElementRules::isIceFamily,
-                    (host, container) -> {
-                        // 只看冻元素：冰是「水为什么结冰」的原因，不是「冰还在不在」的依据。
-                        if (!hasAliveFrozen(container)) {
-                            BlockElementStore.clear(host.level(), host.blockPos());
-                            host.level().setBlock(host.blockPos(),
-                                    Blocks.WATER.defaultBlockState(), 3);
-                        }
-                    },
-                    "minecraft:ice_family");
-        }
+        // 冰族没了冻 → 化回水
+        register(BlockElementRules::isIceFamily,
+                (host, container) -> {
+                    // 只看冻元素：冰是「水为什么结冰」的原因，不是「冰还在不在」的依据。
+                    if (!hasAliveFrozen(container)) {
+                        BlockElementStore.clear(host.level(), host.blockPos());
+                        host.level().setBlock(host.blockPos(),
+                                Blocks.WATER.defaultBlockState(), 3);
+                    }
+                },
+                "minecraft:ice_family");
     }
 
     // ==================== 内部：容器查询（迁移判断用） ====================
 
-    private static boolean hasElement(StatusContainer container,
-                                      DeferredHolder<GenshinElement, ? extends GenshinElement> holder) {
-        GenshinElement target = ModElements.of(holder);
+    private static boolean hasElement(StatusContainer container, String role) {
+        GenshinElement target = ElementRoles.of(role);
         return target != null && sumElementQuantity(container, target) > 0f;
     }
 
@@ -103,7 +98,7 @@ public final class BlockElementMigrations {
         for (StatusInstance inst : container.getAll()) {
             if (inst.isFinished()) continue;
             if (inst instanceof ElementalAttachmentInstance ea
-                    && ModElements.is(ea.getElement(), ModElements.FROZEN)) {
+                    && ElementRoles.is(ea.getElement(), ElementRoles.FROZEN)) {
                 return true;
             }
         }

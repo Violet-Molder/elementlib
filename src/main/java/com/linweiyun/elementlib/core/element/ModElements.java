@@ -1,6 +1,7 @@
 package com.linweiyun.elementlib.core.element;
 
 import com.linweiyun.elementlib.config.ElementLibConfig;
+import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
 import com.linweiyun.elementlib.util.log.LogGroup;
 import com.linweiyun.elementlib.util.log.ModLog;
@@ -148,6 +149,25 @@ public final class ModElements {
         if (aggravate != null && electro != null) aggravate.setMainElement(electro);
         if (burning != null && pyro != null) burning.setMainElement(pyro);
         if (wood != null && dendro != null) wood.setMainElement(dendro);
+
+        bindRoles();
+    }
+
+    /** 把示范元素绑定到角色表；元素未注册的角色保持未绑定。 */
+    public static void bindRoles() {
+        ElementRoles.bind(ElementRoles.FYSIKOS, of(FYSIKOS));
+        ElementRoles.bind(ElementRoles.PYRO, of(PYRO));
+        ElementRoles.bind(ElementRoles.HYDRO, of(HYDRO));
+        ElementRoles.bind(ElementRoles.ANEMO, of(ANEMO));
+        ElementRoles.bind(ElementRoles.ELECTRO, of(ELECTRO));
+        ElementRoles.bind(ElementRoles.DENDRO, of(DENDRO));
+        ElementRoles.bind(ElementRoles.CYRO, of(CYRO));
+        ElementRoles.bind(ElementRoles.GEO, of(GEO));
+        ElementRoles.bind(ElementRoles.FROZEN, of(FROZEN));
+        ElementRoles.bind(ElementRoles.COLD, of(COLD));
+        ElementRoles.bind(ElementRoles.AGGRAVATE, of(AGGRAVATE));
+        ElementRoles.bind(ElementRoles.BURNING, of(BURNING));
+        ElementRoles.bind(ElementRoles.WOOD, of(WOOD));
     }
 
     /** 注册示范元素；{@code register-demo-elements=false} 时什么都不注册。 */

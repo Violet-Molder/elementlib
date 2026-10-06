@@ -24,6 +24,7 @@ public final class ElementalAttachments {
             ATTACHMENTS.register("status_container",
                     () -> AttachmentType.serializable(StatusContainer::new)
                             .sync(StatusContainer.STREAM_CODEC)
+                            .copyOnDeath()
                             .build());
 
     /** 区块上的方块元素容器表（只服务端用）。 */

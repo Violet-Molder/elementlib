@@ -5,7 +5,7 @@ import com.linweiyun.elementlib.config.ElementLibConfig;
 import com.linweiyun.elementlib.core.attachment.ElementalAttachments;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.GenshinElement;
-import com.linweiyun.elementlib.core.element.ModElements;
+import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
 import com.linweiyun.elementlib.core.system.reaction.builtin.ElectroChargedReaction;
@@ -81,8 +81,8 @@ public class ElectroChargedTickState implements IPersistedSerializable {
             return;
         }
 
-        GenshinElement hydro = ModElements.of(ModElements.HYDRO);
-        GenshinElement electro = ModElements.of(ModElements.ELECTRO);
+        GenshinElement hydro = ElementRoles.of(ElementRoles.HYDRO);
+        GenshinElement electro = ElementRoles.of(ElementRoles.ELECTRO);
         if (hydro == null || electro == null) {
             active = false;
             return;
@@ -119,9 +119,11 @@ public class ElectroChargedTickState implements IPersistedSerializable {
 
         LivingEntity target = resolveTarget();
         if (target == null || !target.isAlive()) return;
+        // 月感电顶替感电时不自动激活
+        if (com.linweiyun.elementlib.api.ElementLibApi.variantGate().lunarCharged(null, target)) return;
 
-        GenshinElement hydro = ModElements.of(ModElements.HYDRO);
-        GenshinElement electro = ModElements.of(ModElements.ELECTRO);
+        GenshinElement hydro = ElementRoles.of(ElementRoles.HYDRO);
+        GenshinElement electro = ElementRoles.of(ElementRoles.ELECTRO);
         if (hydro == null || electro == null) return;
 
         ElementalAttachmentInstance hydroInst = ElectroChargedReaction.findElement(container, hydro);
@@ -143,7 +145,7 @@ public class ElectroChargedTickState implements IPersistedSerializable {
         LOGGER.debug("[感电触发] target={} | chain={} | calcAttacker={}",
                 target.getName().getString(), chain, calcAttacker.getName().getString());
 
-        GenshinElement electro = ModElements.of(ModElements.ELECTRO);
+        GenshinElement electro = ElementRoles.of(ElementRoles.ELECTRO);
         ElementalReactionType type = electroChargedType();
         if (electro == null || type == null) return;
 
@@ -159,7 +161,7 @@ public class ElectroChargedTickState implements IPersistedSerializable {
     /** 给半径 {@value #CHAIN_RADIUS} 格内、身上有水附着的其它实体各结算一次感电。 */
     private void chainNearbyWet(LivingEntity source, @Nullable LivingEntity attacker, GenshinElement electro) {
         if (!(source.level() instanceof ServerLevel level)) return;
-        GenshinElement hydro = ModElements.of(ModElements.HYDRO);
+        GenshinElement hydro = ElementRoles.of(ElementRoles.HYDRO);
         ElementalReactionType type = electroChargedType();
         if (hydro == null || type == null) return;
 
@@ -174,7 +176,7 @@ public class ElectroChargedTickState implements IPersistedSerializable {
 
             ElementalAttachmentInstance h = ElectroChargedReaction.findElement(nc, hydro);
             if (h != null && h.getUnit() > 0) {
-                ReactionDamage.dealDirect(type, electro, attacker, nearby,
+                ReactionDamage.dealDirect(type, electro, source, nearby,
                         ElementLibConfig.baseDamage("electro_charged"));
                 ReactionFeedback.transformative(nearby, type, electro);
             }

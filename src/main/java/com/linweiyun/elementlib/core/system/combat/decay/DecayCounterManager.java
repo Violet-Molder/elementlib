@@ -39,9 +39,11 @@ public class DecayCounterManager {
         counter.checkAndResetIfTimeout(currentTick);
 
         float elementCoef = counter.getElementCoefficient();
+        float damageCoef = counter.getDamageCoefficient();
+        float poiseCoef = counter.getPoiseCoefficient();
         counter.incrementHitCount();
 
-        return new DecayResult(elementCoef);
+        return new DecayResult(elementCoef, damageCoef, poiseCoef);
     }
     public DecayCounterData getOrCreateCounter(LivingEntity attacker, @Nullable String characterKey,
                                                DecaySpec spec, long currentTick) {

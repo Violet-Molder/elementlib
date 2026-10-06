@@ -1,6 +1,8 @@
 package com.linweiyun.elementlib.event;
 
 import com.linweiyun.elementlib.ElementLib;
+import com.linweiyun.elementlib.api.ElementLibApi;
+import com.linweiyun.elementlib.api.ElementalTickListener;
 import com.linweiyun.elementlib.core.attachment.ElementalAttachments;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.system.about.ColdAura;
@@ -28,6 +30,11 @@ public class StatusTickHandler {
         boolean frozenWithCold = ColdAura.tick(living, c);
 
         freezeMotion(living, frozenWithCold);
+
+        ElementalTickListener listener = ElementLibApi.tickListener();
+        if (listener != null) {
+            listener.afterElementalTick(living, c, frozenWithCold);
+        }
     }
 
     /**

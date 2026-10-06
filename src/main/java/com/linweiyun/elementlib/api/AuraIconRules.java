@@ -3,6 +3,7 @@ package com.linweiyun.elementlib.api;
 import com.linweiyun.elementlib.config.ElementLibConfig;
 import com.linweiyun.elementlib.core.element.GenshinElement;
 import com.linweiyun.elementlib.core.element.ModElements;
+import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.core.system.about.AttachmentSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
@@ -32,9 +33,6 @@ public final class AuraIconRules {
     private static final Map<GenshinElement, Set<EntityType<?>>> ENVIRONMENT_EXEMPT =
             new ConcurrentHashMap<>();
 
-    /** 演示元素可用时才有水元素，环境默认规则也就只在这种情况下安装。 */
-    private static final boolean ENVIRONMENT_DEFAULT_INSTALLED;
-
     static {
         GenshinElement hydro = ElementLibConfig.demoElementsEnabled()
                 ? ModElements.of(ModElements.HYDRO)
@@ -44,7 +42,6 @@ public final class AuraIconRules {
             // 豁免名单可继续加：复制这一行、换成别的实体类型即可。
             registerEnvironmentExempt(hydro, EntityTypes.DROWNED);
         }
-        ENVIRONMENT_DEFAULT_INSTALLED = hydro != null;
     }
 
     private AuraIconRules() {
@@ -137,13 +134,10 @@ public final class AuraIconRules {
 
     /** 环境附着的默认隐藏：水在 {@code WATER_CREATURE} / {@code WATER_AMBIENT} 上不画，除非在豁免名单里。 */
     private static boolean isHiddenByEnvironmentDefault(AuraIconContext ctx) {
-        if (!ENVIRONMENT_DEFAULT_INSTALLED) {
-            return false;
-        }
         if (ctx.source() != AttachmentSource.ENVIRONMENTAL) {
             return false;
         }
-        if (!ModElements.is(ctx.element(), ModElements.HYDRO)) {
+        if (!ElementRoles.is(ctx.element(), ElementRoles.HYDRO)) {
             return false;
         }
 

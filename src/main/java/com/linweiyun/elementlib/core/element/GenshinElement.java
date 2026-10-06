@@ -40,12 +40,12 @@ public class GenshinElement {
     @Getter
     private int feedbackColor;
 
-    protected GenshinElement(boolean canOverrideDecay, boolean instant, String translationKey) {
+    public GenshinElement(boolean canOverrideDecay, boolean instant, String translationKey) {
         this(canOverrideDecay, instant, false, translationKey);
     }
 
-    protected GenshinElement(boolean canOverrideDecay, boolean instant,
-                             boolean effectCarrier, String translationKey) {
+    public GenshinElement(boolean canOverrideDecay, boolean instant,
+                          boolean effectCarrier, String translationKey) {
         this.canOverrideDecay = canOverrideDecay;
         this.instant = instant;
         this.effectCarrier = effectCarrier;
@@ -55,7 +55,7 @@ public class GenshinElement {
         this.feedbackParticle = null;
     }
 
-    void setMainElement(GenshinElement mainElement) {
+    public void setMainElement(GenshinElement mainElement) {
         this.mainElement = mainElement;
     }
 

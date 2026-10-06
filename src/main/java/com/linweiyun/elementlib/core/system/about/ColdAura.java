@@ -3,7 +3,7 @@ package com.linweiyun.elementlib.core.system.about;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.ColdElement;
 import com.linweiyun.elementlib.core.element.GenshinElement;
-import com.linweiyun.elementlib.core.element.ModElements;
+import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
 import com.linweiyun.elementlib.core.system.about.host.EntityHost;
@@ -31,12 +31,12 @@ public final class ColdAura {
             if (!(inst instanceof ElementalAttachmentInstance ea)) continue;
             GenshinElement element = ea.getElement();
             if (element == null) continue;
-            if (ModElements.is(element, ModElements.FROZEN)) {
+            if (ElementRoles.is(element, ElementRoles.FROZEN)) {
                 frozen = true;
                 cryoFamily = true;
-            } else if (ModElements.is(element, ModElements.CYRO)) {
+            } else if (ElementRoles.is(element, ElementRoles.CYRO)) {
                 cryoFamily = true;
-            } else if (ModElements.is(element, ModElements.COLD)) {
+            } else if (ElementRoles.is(element, ElementRoles.COLD)) {
                 cold = true;
             }
         }
@@ -45,7 +45,7 @@ public final class ColdAura {
         }
 
         if (cryoFamily && !cold) {
-            GenshinElement coldElement = ModElements.of(ModElements.COLD);
+            GenshinElement coldElement = ElementRoles.of(ElementRoles.COLD);
             if (coldElement != null) {
                 ElementalHost host = EntityHost.of(entity);
                 cold = ElementalAttachmentHelper
@@ -63,6 +63,6 @@ public final class ColdAura {
 
     private static boolean isCold(@Nullable StatusInstance inst) {
         return inst instanceof ElementalAttachmentInstance ea
-                && ModElements.is(ea.getElement(), ModElements.COLD);
+                && ElementRoles.is(ea.getElement(), ElementRoles.COLD);
     }
 }

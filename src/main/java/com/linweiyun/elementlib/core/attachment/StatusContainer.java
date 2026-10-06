@@ -1,6 +1,6 @@
 package com.linweiyun.elementlib.core.attachment;
 
-import com.linweiyun.elementlib.core.element.ModElements;
+import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.status.StatusInstanceTypes;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
@@ -109,7 +109,7 @@ public class StatusContainer implements IPersistedSerializable {
         for (StatusInstance inst : instances) {
             if (!inst.isFinished()
                     && inst instanceof ElementalAttachmentInstance ea
-                    && ModElements.is(ea.getElement(), ModElements.FROZEN)) {
+                    && ElementRoles.is(ea.getElement(), ElementRoles.FROZEN)) {
                 hadFrozenAlive = true;
                 break;
             }

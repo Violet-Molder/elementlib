@@ -1,16 +1,19 @@
 package com.linweiyun.elementlib.core.system.about.block;
 
-import com.linweiyun.elementlib.config.ElementLibConfig;
+import com.linweiyun.elementlib.api.ElementLibApi;
+import com.linweiyun.elementlib.api.ElementRoles;
+import com.linweiyun.elementlib.api.EnvironmentAttachTarget;
 import com.linweiyun.elementlib.core.attachment.ElementalAttachments;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.GenshinElement;
-import com.linweiyun.elementlib.core.element.ModElements;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.AttachmentProfile;
 import com.linweiyun.elementlib.core.system.about.AttachmentSource;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentHelper;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
 import com.linweiyun.elementlib.core.system.about.host.BlockHost;
+import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
+import com.linweiyun.elementlib.core.system.about.host.EntityHost;
 import com.linweiyun.elementlib.util.log.LogGroup;
 import com.linweiyun.elementlib.util.log.ModLog;
 import net.minecraft.core.BlockPos;
@@ -24,8 +27,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.registries.DeferredHolder;
 import org.slf4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -113,19 +116,19 @@ public final class BlockElementHelper {
         if (!(entity.level() instanceof ServerLevel level)) return;
         if (entity.isSpectator()) return;
 
-        GenshinElement hydro = ModElements.of(ModElements.HYDRO);
-        GenshinElement pyro = ModElements.of(ModElements.PYRO);
+        GenshinElement hydro = ElementRoles.of(ElementRoles.HYDRO);
+        GenshinElement pyro = ElementRoles.of(ElementRoles.PYRO);
 
-        // 玩家：水（含淋雨）与火都是环境元素源，直接挂在玩家自己的容器上
+        // 玩家：水（含淋雨）与火都是环境元素源，落点由环境宿主出口决定
         if (entity instanceof Player player) {
-            StatusContainer playerContainer = player.getData(ElementalAttachments.CONTAINER);
-            if (playerContainer == null) return;
+            ElementalHost host = environmentHost(player);
+            if (host == null) return;
             if (hydro != null && (player.isInWater() || (raining && isRainedOn(level, player)))) {
-                ElementalAttachmentHelper.attach(player, playerContainer, hydro,
+                ElementalAttachmentHelper.attach(host, hydro,
                         AttachmentSource.ENVIRONMENTAL, AttachmentProfile.WEAK);
             }
             if (pyro != null && isInFire(player)) {
-                ElementalAttachmentHelper.attach(player, playerContainer, pyro,
+                ElementalAttachmentHelper.attach(host, pyro,
                         AttachmentSource.ENVIRONMENTAL, AttachmentProfile.WEAK);
             }
             return;
@@ -142,10 +145,17 @@ public final class BlockElementHelper {
         MobCategory cat = entity.getType().getCategory();
         if (cat == MobCategory.WATER_CREATURE || cat == MobCategory.WATER_AMBIENT) return;
 
-        StatusContainer container = entity.getData(ElementalAttachments.CONTAINER);
-        if (container == null) return;
-        ElementalAttachmentHelper.attach(entity, container, hydro,
+        ElementalHost host = environmentHost(entity);
+        if (host == null) return;
+        ElementalAttachmentHelper.attach(host, hydro,
                 AttachmentSource.ENVIRONMENTAL, AttachmentProfile.WEAK);
+    }
+
+    /** 环境附着的落点；接入方未替换时就是实体自己。 */
+    @Nullable
+    private static ElementalHost environmentHost(LivingEntity entity) {
+        EnvironmentAttachTarget target = ElementLibApi.environmentTarget();
+        return target == null ? EntityHost.of(entity) : target.targetFor(entity);
     }
 
     /** 这个位置是不是正被雨淋着（生物群系在下雨 + 头顶见天）。 */
@@ -164,18 +174,20 @@ public final class BlockElementHelper {
         boolean inFire = isInFire(player);
         if (!inWater && !inFire) return;
 
-        StatusContainer container = player.getData(ElementalAttachments.CONTAINER);
+        ElementalHost host = environmentHost(player);
+        if (host == null) return;
+        StatusContainer container = host.container();
         if (container == null) return;
 
-        GenshinElement hydro = ModElements.of(ModElements.HYDRO);
-        GenshinElement pyro = ModElements.of(ModElements.PYRO);
+        GenshinElement hydro = ElementRoles.of(ElementRoles.HYDRO);
+        GenshinElement pyro = ElementRoles.of(ElementRoles.PYRO);
 
-        if (hydro != null && inWater && !hasElement(container, ModElements.HYDRO)) {
-            ElementalAttachmentHelper.attach(player, container, hydro,
+        if (hydro != null && inWater && !hasElement(container, ElementRoles.HYDRO)) {
+            ElementalAttachmentHelper.attach(host, hydro,
                     AttachmentSource.ENVIRONMENTAL, AttachmentProfile.WEAK);
         }
-        if (pyro != null && inFire && !hasElement(container, ModElements.PYRO)) {
-            ElementalAttachmentHelper.attach(player, container, pyro,
+        if (pyro != null && inFire && !hasElement(container, ElementRoles.PYRO)) {
+            ElementalAttachmentHelper.attach(host, pyro,
                     AttachmentSource.ENVIRONMENTAL, AttachmentProfile.WEAK);
         }
     }
@@ -189,9 +201,9 @@ public final class BlockElementHelper {
         return feet.is(Blocks.FIRE) || feet.is(Blocks.SOUL_FIRE);
     }
 
-    /** 环境附着推进；示范元素未启用时没有任何元素可挂，直接返回。 */
+    /** 环境附着推进。 */
     public static void onServerTick(ServerLevel level) {
-        if (level == null || !ElementLibConfig.demoElementsEnabled()) return;
+        if (level == null) return;
 
         // 玩家每 tick 单独过一遍：进水 / 进火要立刻附着，不能等下一轮 1 秒的批量扫描
         for (ServerPlayer player : level.players()) {
@@ -289,9 +301,8 @@ public final class BlockElementHelper {
 
     // ==================== 内部：容器查询 ====================
 
-    private static boolean hasElement(StatusContainer container,
-                                      DeferredHolder<GenshinElement, ? extends GenshinElement> holder) {
-        GenshinElement target = ModElements.of(holder);
+    private static boolean hasElement(StatusContainer container, String role) {
+        GenshinElement target = ElementRoles.of(role);
         return target != null && sumElementQuantity(container, target) > 0f;
     }
 

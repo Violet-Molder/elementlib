@@ -98,6 +98,12 @@ tasks.withType(JavaCompile).configureEach {
     options.forkOptions.jvmArgs.add('--sun-misc-unsafe-memory-access=allow')
 }
 
+// 发布到 Maven Central 需要 javadoc jar；doclint 的“缺少 @param/@return”会让构建失败，这里关掉它。
+tasks.withType(Javadoc).configureEach {
+    options.encoding = 'UTF-8'
+    options.addBooleanOption('Xdoclint:none', true)
+}
+
 idea {
     module {
         downloadSources = true
