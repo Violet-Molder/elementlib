@@ -5,6 +5,10 @@ import com.linweiyun.elementlib.api.ElementLibApi;
 import com.linweiyun.elementlib.api.ElementalTickListener;
 import com.linweiyun.elementlib.core.attachment.ElementalAttachments;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
+import com.linweiyun.elementlib.core.module.ElibModuleContainer;
+import com.linweiyun.elementlib.core.module.ElibModuleHost;
+import com.linweiyun.elementlib.core.module.ElibModuleHosts;
+import com.linweiyun.elementlib.core.module.ElibModuleTypes;
 import com.linweiyun.elementlib.core.system.about.ColdAura;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -23,10 +27,15 @@ public class StatusTickHandler {
         if (!(event.getEntity() instanceof LivingEntity living)) return;
         if (living.level().isClientSide()) return;
 
-        StatusContainer c = living.getData(ElementalAttachments.CONTAINER);
+        ElibModuleHost host = ElibModuleHosts.of(living);
+        if (host == null) return;
+        ElibModuleContainer modules = host.container();
+        if (modules == null) return;
+        StatusContainer c = modules.ensure(ElibModuleTypes.ELEMENT);
         c.tick();
 
-        living.setData(ElementalAttachments.CONTAINER.get(), c);
+        modules.put(c);
+        host.commit(modules);
         boolean frozenWithCold = ColdAura.tick(living, c);
 
         freezeMotion(living, frozenWithCold);

@@ -2,9 +2,11 @@ package com.linweiyun.elementlib;
 
 import com.linweiyun.elementlib.config.ElementLibConfig;
 import com.linweiyun.elementlib.content.items.ModItems;
+import com.linweiyun.elementlib.core.attachment.ElibModuleAttachments;
 import com.linweiyun.elementlib.core.attachment.ElementalAttachments;
 import com.linweiyun.elementlib.core.element.ModElements;
 import com.linweiyun.elementlib.core.entity.ModEntities;
+import com.linweiyun.elementlib.core.module.ElibModuleTypes;
 import com.linweiyun.elementlib.core.system.about.block.BlockElementHelper;
 import com.linweiyun.elementlib.core.system.combat.decay.DecayCounterService;
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
@@ -51,6 +53,8 @@ public class ElementLib {
         boolean reactions = ElementLibConfig.demoReactionsEnabled();
 
         ModElements.register(modEventBus);
+        ElibModuleTypes.init();
+        ElibModuleAttachments.register(modEventBus);
         ElementalAttachments.register(modEventBus);
         ModStatusInstanceTypes.register(modEventBus);
 

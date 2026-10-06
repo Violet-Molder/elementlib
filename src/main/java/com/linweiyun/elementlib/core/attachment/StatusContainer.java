@@ -1,6 +1,9 @@
 package com.linweiyun.elementlib.core.attachment;
 
 import com.linweiyun.elementlib.api.ElementRoles;
+import com.linweiyun.elementlib.core.module.ElibModuleData;
+import com.linweiyun.elementlib.core.module.ElibModuleType;
+import com.linweiyun.elementlib.core.module.ElibModuleTypes;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.status.StatusInstanceTypes;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
@@ -37,7 +40,7 @@ import java.util.function.Predicate;
 /**
  * 状态容器 —— 某个宿主身上所有 StatusInstance 的集合
  */
-public class StatusContainer implements IPersistedSerializable {
+public class StatusContainer implements IPersistedSerializable, ElibModuleData {
     public static final Logger LOGGER = ModLog.getLogger(LogGroup.CORE);
     public final static Codec<StatusContainer> CODEC = PersistedParser.createCodec(StatusContainer::new);
     public final static StreamCodec<ByteBuf, StatusContainer> STREAM_CODEC = PersistedParser.createStreamCodec(StatusContainer::new);
@@ -56,6 +59,12 @@ public class StatusContainer implements IPersistedSerializable {
     }
 
     public static final StatusContainer EMPTY = new StatusContainer();
+
+    /** 元素模块的类型标识：本容器就是 {@code elementlib:element} 模块的数据对象。 */
+    @Override
+    public ElibModuleType<?> type() {
+        return ElibModuleTypes.ELEMENT;
+    }
 
     // ========== 存取 ==========
 
