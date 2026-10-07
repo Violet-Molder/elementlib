@@ -159,9 +159,8 @@ signing {
     def keyFile = file(System.getenv('GPG_PRIVATE_KEY_FILE') ?: 'G:\\el_key.asc')
     def secretKey = keyFile.exists() ? keyFile.text : ''
     def password = System.getenv('GPG_PASSWORD') ?: ''
-    println "SIGN-DEBUG fileExists=${keyFile.exists()} secretLen=${secretKey.length()} pwLen=${password.length()}"
     if (secretKey && password) {
         useInMemoryPgpKeys(secretKey, password)
+        sign publishing.publications.mavenJava
     }
-    sign publishing.publications.mavenJava
 }
