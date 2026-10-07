@@ -5,6 +5,7 @@ import lombok.Setter;
 
 /** 日志分组：每组一个独立的开关，{@link ModLog} 按组决定这条日志出不出声。 */
 public enum LogGroup {
+   EVENT("事件（广播 / 订阅）"),
    COMBAT("战斗（动作 / 伤害 / 目标选择）"),
    ELEMENT("元素（附着 / 反应）"),
    CHARACTER("角色（角色 / 角色效果）"),

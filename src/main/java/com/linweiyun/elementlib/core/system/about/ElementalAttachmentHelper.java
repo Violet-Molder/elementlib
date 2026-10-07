@@ -2,6 +2,8 @@ package com.linweiyun.elementlib.core.system.about;
 
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.GenshinElement;
+import com.linweiyun.elementlib.api.event.ElibElementAttachedEvent;
+import com.linweiyun.elementlib.api.event.ElibEvents;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
 import com.linweiyun.elementlib.core.system.about.host.EntityHost;
@@ -9,6 +11,7 @@ import com.linweiyun.elementlib.core.system.reaction.ElementalReactionManager;
 import com.linweiyun.elementlib.core.system.reaction.ReactionContext;
 import com.linweiyun.elementlib.util.log.LogGroup;
 import com.linweiyun.elementlib.util.log.ModLog;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -50,6 +53,14 @@ public class ElementalAttachmentHelper {
                                                 GenshinElement element, AttachmentSource source,
                                                 AttachmentProfile profile) {
         return doAttach(container, host, element, source, profile, AttachContext.ENVIRONMENT, false);
+    }
+
+    /** 反应/天性写入的容器入口（带来源上下文）。 */
+    public static AttachResult attachInternalTo(StatusContainer container, ElementalHost host,
+                                                GenshinElement element, AttachmentSource source,
+                                                AttachmentProfile profile, AttachContext context) {
+        return doAttach(container, host, element, source, profile,
+                context == null ? AttachContext.ENVIRONMENT : context, false);
     }
 
     /**
@@ -138,6 +149,7 @@ public class ElementalAttachmentHelper {
         float actualQuantity = profile.actualQuantity();
         ElementalAttachmentInstance existing = findMatching(container, element, source, sourceKey);
 
+        AttachWrite write;
         if (existing == null) {
             ElementalAttachmentInstance newInst =
                     new ElementalAttachmentInstance(element, source, profile, actualQuantity);
@@ -151,9 +163,8 @@ public class ElementalAttachmentHelper {
             }
             newInst.setHost(host);
             container.add(newInst);
-            return finish(host, container, element, source, profile, ctx, react, actualQuantity);
-        }
-        if (sourceKey != null && existing.hasSourceCharacter()) {
+            write = AttachWrite.NEW;
+        } else if (sourceKey != null && existing.hasSourceCharacter()) {
             long currentTick = gameTime;
             long existingEnd = existing.getDecayEndTick();
             float newDurationTicks = profile.getDurationSeconds() * 20f;
@@ -165,23 +176,50 @@ public class ElementalAttachmentHelper {
             } else {
                 existing.refreshSource(sourceKey, gameTime);
             }
-            return finish(host, container, element, source, profile, ctx, react, actualQuantity);
-        }
-
-        if (actualQuantity <= existing.getUnit()) {
+            write = AttachWrite.REFRESHED;
+        } else if (actualQuantity <= existing.getUnit()) {
             if (sourceKey != null) {
                 existing.refreshSource(sourceKey, gameTime);
             }
-            return finish(host, container, element, source, profile, ctx, react, actualQuantity);
+            write = AttachWrite.REFRESHED;
+        } else {
+            existing.refreshQuantity(actualQuantity);
+            if (sourceKey != null) {
+                existing.refreshSource(sourceKey, gameTime);
+            }
+            if (element.canOverrideDecay()) {
+                existing.overrideDecayRate(profile.getDecayPerSecond());
+            }
+            write = AttachWrite.OVERWRITTEN;
         }
-        existing.refreshQuantity(actualQuantity);
-        if (sourceKey != null) {
-            existing.refreshSource(sourceKey, gameTime);
-        }
-        if (element.canOverrideDecay()) {
-            existing.overrideDecayRate(profile.getDecayPerSecond());
-        }
+
+        // 先广播附着，再走 finish()（反应），保证监听者收到的时间线是「先挂上、后反应」。
+        publishAttached(host, element, source, profile, ctx, actualQuantity, write, react);
         return finish(host, container, element, source, profile, ctx, react, actualQuantity);
+    }
+
+    /** 广播 elementlib:element_attached。 */
+    private static void publishAttached(@Nullable ElementalHost host, GenshinElement element,
+                                        AttachmentSource source, AttachmentProfile profile,
+                                        AttachContext ctx, float actualQuantity, AttachWrite write,
+                                        boolean react) {
+        ElibElementAttachedEvent event = new ElibElementAttachedEvent(
+                levelOf(host), ctx.gameTime(), host, element, source, profile,
+                actualQuantity, write, ctx.originId(), ctx.sourceKey(), ctx.attackerEntity(), !react);
+        ElibEvents.post(event);
+    }
+
+    /** 宿主所在的服务端世界；{@link ElementalHost#level()} 只对方块宿主非空，实体宿主取实体自己的世界。 */
+    @Nullable
+    private static ServerLevel levelOf(@Nullable ElementalHost host) {
+        if (host == null) {
+            return null;
+        }
+        if (host.level() != null) {
+            return host.level();
+        }
+        return host.entity() != null && host.entity().level() instanceof ServerLevel serverLevel
+                ? serverLevel : null;
     }
     private static AttachResult finish(ElementalHost host, StatusContainer container,
                                        GenshinElement element, AttachmentSource source,
@@ -196,7 +234,7 @@ public class ElementalAttachmentHelper {
                 element, reactionUnit, source, profile,
                 ctx.sourceKey(),
                 ctx.attackerEntity(),
-                container, host == null ? null : host.entity(), host);
+                container, host == null ? null : host.entity(), host, ctx.originId());
         return new AttachResult(true, ElementalReactionManager.tryReactFor(host, reactionContext));
     }
     private static ElementalAttachmentInstance findMatching(

@@ -10,6 +10,7 @@ import com.linweiyun.elementlib.core.element.GenshinElement;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.AttachmentProfile;
 import com.linweiyun.elementlib.core.system.about.AttachmentSource;
+import com.linweiyun.elementlib.core.system.about.AttachContext;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentHelper;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
 import com.linweiyun.elementlib.core.system.about.host.BlockHost;
@@ -115,7 +116,8 @@ public final class BlockElementHelper {
 
         // 附着 —— 入口内部会接着尝试反应（与实体端同一套）
         AttachResult result = ElementalAttachmentHelper.attach(
-                host, element, AttachmentSource.ENVIRONMENTAL, profile);
+                host, element, AttachmentSource.ENVIRONMENTAL, profile,
+                AttachContext.ENVIRONMENT.withOriginId(ORIGIN_BLOCK));
         if (!result.attached()) {
             // 没挂上就什么都不落：不提交、也不跑迁移（否则「冰族没冰就化水」的规则会把误触当融化）
             return result;
@@ -131,6 +133,10 @@ public final class BlockElementHelper {
     private static void migrateBlockState(BlockHost host, StatusContainer container) {
         BlockElementMigrations.runAll(host, container);
     }
+
+    /** 附着事件的来源标识：外来元素打到方块上。 */
+    private static final net.minecraft.resources.Identifier ORIGIN_BLOCK =
+            net.minecraft.resources.Identifier.fromNamespaceAndPath("elementlib", "environment/block");
 
     // ==================== 水环境给实体挂水 ====================
 

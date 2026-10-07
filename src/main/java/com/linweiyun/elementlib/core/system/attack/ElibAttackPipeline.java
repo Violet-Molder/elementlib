@@ -6,6 +6,9 @@ import com.linweiyun.elementlib.api.ElibAttackElementResolver;
 import com.linweiyun.elementlib.api.ElibAttackGate;
 import com.linweiyun.elementlib.api.ElibAttackListener;
 import com.linweiyun.elementlib.api.ElibAttackOutcome;
+import com.linweiyun.elementlib.api.event.ElibAttackHitEvent;
+import com.linweiyun.elementlib.api.event.ElibAttackPerformedEvent;
+import com.linweiyun.elementlib.api.event.ElibEvents;
 import com.linweiyun.elementlib.content.items.ElementSwordItem;
 import com.linweiyun.elementlib.core.element.GenshinElement;
 import com.linweiyun.elementlib.core.module.ElibModuleHost;
@@ -29,6 +32,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -131,6 +135,7 @@ public final class ElibAttackPipeline {
         }
 
         notifyListeners(outcome);
+        postAttackEvents(action, outcome);
         return outcome;
     }
 
@@ -160,11 +165,41 @@ public final class ElibAttackPipeline {
         }
         ElibAttackOutcome outcome = new ElibAttackOutcome(action, List.of(host));
         GenshinElement element = resolveElement(action);
-        if (elementAttachEnabled && element != null && ElibModuleTypes.ELEMENT.supports(host.kind())) {
+        if (elementAttachEnabled && element != null && action.elementAmount() > 0f
+                && ElibModuleTypes.ELEMENT.supports(host.kind())) {
             attachToHost(host, element, action, outcome, reactionUnit);
         }
         notifyListeners(outcome);
+        postAttackEvents(action, outcome);
         return outcome;
+    }
+
+    /**
+     * 广播攻击事件：L1 攻击行为（每次出手一条，含对空）与 L2 击中目标（每个被触及的宿主各一条）。
+     * {@code damageSubStep} 为真的子步骤不发 L1。
+     */
+    private static void postAttackEvents(@Nullable ElibAttackAction action, ElibAttackOutcome outcome) {
+        if (action == null || outcome == null) {
+            return;
+        }
+        if (!(action.attacker().level() instanceof ServerLevel level)) {
+            return;
+        }
+        long gameTime = action.gameTime() > 0L ? action.gameTime() : level.getGameTime();
+        if (!action.damageSubStep()) {
+            ElibAttackPerformedEvent event = new ElibAttackPerformedEvent(level, gameTime, action, outcome);
+            ElibEvents.post(event);
+        }
+        for (ElibModuleHost host : outcome.hosts()) {
+            boolean blockChanged = false;
+            if (host.blockPos() != null && host.level() != null) {
+                BlockState before = outcome.blockStateOf(host);
+                blockChanged = before != null && before != host.level().getBlockState(host.blockPos());
+            }
+            ElibAttackHitEvent event = new ElibAttackHitEvent(level, gameTime, action, outcome, host,
+                    outcome.attachResultOf(host), blockChanged);
+            ElibEvents.post(event);
+        }
     }
 
     private static void attachToHost(ElibModuleHost host, GenshinElement element,

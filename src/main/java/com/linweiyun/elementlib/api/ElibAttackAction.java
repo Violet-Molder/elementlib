@@ -32,7 +32,9 @@ public record ElibAttackAction(
         @Nullable String sourceKey,
         float poise,
         float elementAmount,
-        @Nullable BlockPos targetBlock) {
+        @Nullable BlockPos targetBlock,
+        boolean damageSubStep,
+        @Nullable Identifier originId) {
 
     /** 常用构造：几何取攻击者眼睛朝向，来源取主手物品。 */
     public static ElibAttackAction of(Entity attacker,
@@ -55,6 +57,8 @@ public record ElibAttackAction(
                 sourceKeyOf(attacker),
                 0f,
                 AttachmentProfile.WEAK.getBaseQuantity(),
+                null,
+                false,
                 null);
     }
 
@@ -70,7 +74,7 @@ public record ElibAttackAction(
         return new ElibAttackAction(attacker, element, source, profile, trigger,
                 trigger.name().toLowerCase(java.util.Locale.ROOT),
                 origin, direction, reach, attacker.level().getGameTime(), sourceKeyOf(attacker),
-                0f, AttachmentProfile.WEAK.getBaseQuantity(), null);
+                0f, AttachmentProfile.WEAK.getBaseQuantity(), null, false, null);
     }
 
     /** 左键点击方块：几何朝向目标格，并把目标格带在动作上（下游不用再射线找回）。 */
@@ -86,19 +90,42 @@ public record ElibAttackAction(
         return new ElibAttackAction(player, element, source, profile,
                 ElibAttackTrigger.BLOCK_LEFT_CLICK, "block_left_click",
                 origin, direction, reach, player.level().getGameTime(), sourceKeyOf(player),
-                0f, AttachmentProfile.WEAK.getBaseQuantity(), pos);
+                0f, AttachmentProfile.WEAK.getBaseQuantity(), pos, false, null);
     }
 
     /** 带上一笔削韧值（方块韧性用它）。 */
     public ElibAttackAction withPoise(float value) {
         return new ElibAttackAction(attacker, element, source, profile, trigger, kindId,
-                origin, direction, reach, gameTime, sourceKey, value, elementAmount, targetBlock);
+                origin, direction, reach, gameTime, sourceKey, value, elementAmount, targetBlock,
+                damageSubStep, originId);
     }
 
     /** 带上一笔附着量（0 = 这次攻击不附着）。 */
     public ElibAttackAction withElementAmount(float value) {
         return new ElibAttackAction(attacker, element, source, profile, trigger, kindId,
-                origin, direction, reach, gameTime, sourceKey, poise, value, targetBlock);
+                origin, direction, reach, gameTime, sourceKey, poise, value, targetBlock,
+                damageSubStep, originId);
+    }
+
+    /** 换一个攻击种类 id（lib 不认识的种类用字符串表达）。 */
+    public ElibAttackAction withKindId(String newKindId) {
+        return new ElibAttackAction(attacker, element, source, profile, trigger, newKindId,
+                origin, direction, reach, gameTime, sourceKey, poise, elementAmount, targetBlock,
+                damageSubStep, originId);
+    }
+
+    /** 带上来源标识，会一路传到元素附着事件。 */
+    public ElibAttackAction withOriginId(@Nullable Identifier newOriginId) {
+        return new ElibAttackAction(attacker, element, source, profile, trigger, kindId,
+                origin, direction, reach, gameTime, sourceKey, poise, elementAmount, targetBlock,
+                damageSubStep, newOriginId);
+    }
+
+    /** 标记这一下是伤害管线内部的子步骤，攻击行为事件不会为它发。 */
+    public ElibAttackAction asDamageSubStep() {
+        return new ElibAttackAction(attacker, element, source, profile, trigger, kindId,
+                origin, direction, reach, gameTime, sourceKey, poise, elementAmount, targetBlock,
+                true, originId);
     }
 
     @Nullable
