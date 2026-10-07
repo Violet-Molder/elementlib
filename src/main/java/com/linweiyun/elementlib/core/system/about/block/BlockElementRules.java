@@ -1,8 +1,7 @@
 package com.linweiyun.elementlib.core.system.about.block;
 
-import com.linweiyun.elementlib.config.ElementLibConfig;
 import com.linweiyun.elementlib.core.element.GenshinElement;
-import com.linweiyun.elementlib.core.element.ModElements;
+import com.linweiyun.elementlib.api.ElementRoles;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -64,17 +63,15 @@ public final class BlockElementRules {
     // ==================== 内置：水与冰族 ====================
 
     static {
-        if (ElementLibConfig.demoElementsEnabled()) {
-            register(state -> isSourceWater(state),
-                    (state, element) -> ModElements.is(element, ModElements.CYRO)
-                            || ModElements.is(element, ModElements.FROZEN),
-                    "minecraft:water");
-            register(state -> isIceFamily(state),
-                    (state, element) -> ModElements.is(element, ModElements.PYRO)
-                            || ModElements.is(element, ModElements.CYRO)
-                            || ModElements.is(element, ModElements.FROZEN),
-                    "minecraft:ice_family");
-        }
+        register(state -> isSourceWater(state),
+                (state, element) -> ElementRoles.is(element, ElementRoles.CYRO)
+                        || ElementRoles.is(element, ElementRoles.FROZEN),
+                "minecraft:water");
+        register(state -> isIceFamily(state),
+                (state, element) -> ElementRoles.is(element, ElementRoles.PYRO)
+                        || ElementRoles.is(element, ElementRoles.CYRO)
+                        || ElementRoles.is(element, ElementRoles.FROZEN),
+                "minecraft:ice_family");
     }
 
     /** 完整水源（level=0）：水方块、且不是流动水。 */
@@ -100,11 +97,11 @@ public final class BlockElementRules {
      */
     @Nullable
     public static GenshinElement selfAura(BlockState state) {
-        if (state == null || !ElementLibConfig.demoElementsEnabled()) {
+        if (state == null) {
             return null;
         }
         if (isSourceWater(state)) {
-            return ModElements.of(ModElements.HYDRO);
+            return ElementRoles.of(ElementRoles.HYDRO);
         }
         // 浮冰不额外挂冰气场：它的元素是冻结反应写进去的冻；给它挂一份永久冰会让
         // 「冰族没有冰/冻就化水」这条迁移规则永远不成立，浮冰永不化。
@@ -112,7 +109,7 @@ public final class BlockElementRules {
             return null;
         }
         if (isIceFamily(state)) {
-            return ModElements.of(ModElements.CYRO);
+            return ElementRoles.of(ElementRoles.CYRO);
         }
         return null;
     }

@@ -5,9 +5,11 @@ import com.linweiyun.elementlib.core.element.GenshinElement;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.AttachmentProfile;
 import com.linweiyun.elementlib.core.system.about.AttachmentSource;
+import com.linweiyun.elementlib.core.system.about.AttachContext;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentHelper;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
 import com.linweiyun.elementlib.core.system.about.host.BlockHost;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -17,6 +19,10 @@ public final class BlockSelfAura {
 
     /** 自带元素的满量（U）。取 1U：正好够一次 1:1 的反应把它换掉（水+冰=冻结）。 */
     private static final float BASE_QUANTITY = 1.0f;
+
+    /** 附着事件的来源标识：方块「本来就是水 / 就是冰」。 */
+    private static final ResourceLocation ORIGIN_SELF_AURA =
+            ResourceLocation.fromNamespaceAndPath("elementlib", "environment/block_self_aura");
 
     private BlockSelfAura() {
     }
@@ -38,7 +44,8 @@ public final class BlockSelfAura {
         // host 传 null：自带元素是方块的天性，不经过「能被什么附着」那道外部筛查
         //（水本来就不收水，但水当然自带水）。用现成的容器写入，不回头问 host.container()，以免递归。
         ElementalAttachmentHelper.attachInternalTo(container, null, aura,
-                AttachmentSource.ENVIRONMENTAL, AttachmentProfile.permanent(BASE_QUANTITY));
+                AttachmentSource.ENVIRONMENTAL, AttachmentProfile.permanent(BASE_QUANTITY),
+                AttachContext.ENVIRONMENT.withOriginId(ORIGIN_SELF_AURA));
     }
 
     /** 这个方块现在有没有自带元素（只读，用于迁移判断与诊断）。 */

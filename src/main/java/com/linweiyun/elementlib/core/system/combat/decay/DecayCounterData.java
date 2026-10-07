@@ -66,6 +66,20 @@ public class DecayCounterData {
     }
 
     /**
+     * 获取当前命中次数对应的伤害系数。
+     */
+    public float getDamageCoefficient() {
+        return group.getDamageCoefficient(hitCount.get());
+    }
+
+    /**
+     * 获取当前命中次数对应的削韧系数。
+     */
+    public float getPoiseCoefficient() {
+        return group.getPoiseCoefficient(hitCount.get());
+    }
+
+    /**
      * 由Worker线程检测超时并设置标记，不修改 hitCount/startTimeTick。
      */
     public void workerCheckTimeout(long currentTick) {

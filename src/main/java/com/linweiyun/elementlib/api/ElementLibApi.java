@@ -10,6 +10,8 @@ import com.linweiyun.elementlib.core.system.about.AttachmentSource;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentHelper;
 import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
 import com.linweiyun.elementlib.core.system.about.host.EntityHost;
+import com.linweiyun.elementlib.core.system.attack.ElibAttackPipeline;
+import com.linweiyun.elementlib.core.system.attack.ElibDefaultVanillaAttackBridge;
 import com.linweiyun.elementlib.core.system.reaction.ElementalReaction;
 import com.linweiyun.elementlib.core.system.reaction.damage.VariantGateHolder;
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
@@ -26,6 +28,12 @@ import java.util.stream.StreamSupport;
 public final class ElementLibApi {
 
     private static volatile boolean auraIconVisible = true;
+
+    private static volatile ReactionFeedbackHandler feedbackHandler;
+
+    private static volatile ElementalTickListener tickListener;
+
+    private static volatile EnvironmentAttachTarget environmentTarget;
 
     private ElementLibApi() {
     }
@@ -154,5 +162,83 @@ public final class ElementLibApi {
     /** 元素附着图标总闸当前状态。 */
     public static boolean auraIconVisible() {
         return auraIconVisible;
+    }
+
+    /** 换掉反应表现出口；传 {@code null} 恢复库自带的粒子 + 文案。 */
+    public static void setFeedbackHandler(@Nullable ReactionFeedbackHandler handler) {
+        feedbackHandler = handler;
+    }
+
+    /** 当前的反应表现出口；未替换时为 {@code null}。 */
+    @Nullable
+    public static ReactionFeedbackHandler feedbackHandler() {
+        return feedbackHandler;
+    }
+
+    /** 元素状态每 tick 之后的回调；传 {@code null} 清除。 */
+    public static void setTickListener(@Nullable ElementalTickListener listener) {
+        tickListener = listener;
+    }
+
+    @Nullable
+    public static ElementalTickListener tickListener() {
+        return tickListener;
+    }
+
+    /** 环境附着的宿主出口；传 {@code null} 恢复「挂到实体自己」。 */
+    public static void setEnvironmentTarget(@Nullable EnvironmentAttachTarget target) {
+        environmentTarget = target;
+    }
+
+    @Nullable
+    public static EnvironmentAttachTarget environmentTarget() {
+        return environmentTarget;
+    }
+
+    // ==================== 攻击 ====================
+
+    /**
+     * 统一攻击入口：对空 / 方块左键 / 实体左键 / 动作伤害点都走这里。
+     *
+     * @return 这次攻击触及的宿主与每个宿主的附着结果
+     */
+    public static ElibAttackOutcome attack(ElibAttackAction action) {
+        return ElibAttackPipeline.dispatch(action);
+    }
+
+    /** 注册攻击监听器（方块韧性、表现、消耗等）。 */
+    public static void addAttackListener(ElibAttackListener listener) {
+        ElibAttackPipeline.addListener(listener);
+    }
+
+    /** 移除攻击监听器。 */
+    public static void removeAttackListener(ElibAttackListener listener) {
+        ElibAttackPipeline.removeListener(listener);
+    }
+
+    /** 攻击门禁；MineGenshin 用它注入「仅原神模式」，传 {@code null} 恢复永远放行。 */
+    public static void setAttackGate(@Nullable ElibAttackGate gate) {
+        ElibAttackPipeline.setGate(gate);
+    }
+
+    /** 元素解析器；传 {@code null} 表示只有显式带元素的攻击才附着。 */
+    public static void setAttackElementResolver(@Nullable ElibAttackElementResolver resolver) {
+        ElibAttackPipeline.setElementResolver(resolver);
+    }
+
+    /** 注册方块关注点：方块韧性这类"只看某些方块"的模块用它。 */
+    public static void addAttackBlockInterest(ElibAttackBlockInterest interest) {
+        ElibAttackPipeline.addBlockInterest(interest);
+    }
+
+    /** 注册外部宿主工厂（例如 PGCharacter）。 */
+    public static <C> void registerModuleCarrier(Class<C> carrierType,
+                                                 java.util.function.Function<C, com.linweiyun.elementlib.core.module.ElibModuleHost> factory) {
+        com.linweiyun.elementlib.core.module.ElibModuleHosts.registerCarrier(carrierType, factory);
+    }
+
+    /** 原版实体攻击默认桥开关；MineGenshin 关掉它，避免与自己的动作系统重复。 */
+    public static void setDefaultVanillaAttackBridge(boolean enabled) {
+        ElibDefaultVanillaAttackBridge.setEnabled(enabled);
     }
 }

@@ -2,15 +2,16 @@ package com.linweiyun.elementlib.content.items;
 
 import com.linweiyun.elementlib.ElementLib;
 import com.linweiyun.elementlib.core.element.GenshinElement;
+import com.linweiyun.elementlib.api.ElibAttackAction;
+import com.linweiyun.elementlib.api.ElibAttackTrigger;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.system.about.AttachResult;
 import com.linweiyun.elementlib.core.system.about.AttachmentProfile;
 import com.linweiyun.elementlib.core.system.about.AttachmentSource;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentHelper;
+import com.linweiyun.elementlib.core.system.attack.ElibAttackPipeline;
 import com.linweiyun.elementlib.core.system.about.host.BlockHost;
-import com.linweiyun.elementlib.core.system.about.host.EntityHost;
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -61,12 +62,9 @@ public class ElementSwordItem extends SwordItem {
                     stack.getItem(), target, this.elementKey);
             return;
         }
-        ResourceLocation itemKey = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        ElementalAttachmentHelper.attach(EntityHost.of(target), element,
-                AttachmentSource.NORMAL_ATTACK, AttachmentProfile.WEAK,
-                itemKey == null ? elementId : itemKey.toString(), target.level().getGameTime());
-        ElementLib.LOGGER.info("[sword-debug] {} hit {} -> attach {} source={}",
-                stack.getItem(), target, element.getId(), itemKey);
+        // 统一攻击入口：打实体也算一次"攻击"，附着交给管线（方块/实体同一条路）
+        ElibAttackPipeline.dispatchOn(ElibAttackAction.of(attacker, element,
+                ElibAttackTrigger.ENTITY, AttachmentSource.NORMAL_ATTACK, AttachmentProfile.WEAK, 3.0), target);
     }
 
     /**
@@ -98,10 +96,9 @@ public class ElementSwordItem extends SwordItem {
                 player, eye, end, searchBox,
                 e -> e instanceof LivingEntity, range * range);
         if (entityHit != null && entityHit.getEntity() instanceof LivingEntity living) {
-            ResourceLocation itemKey = BuiltInRegistries.ITEM.getKey(stack.getItem());
-            ElementalAttachmentHelper.attach(EntityHost.of(living), element,
-                    AttachmentSource.NORMAL_ATTACK, AttachmentProfile.WEAK,
-                    itemKey == null ? elementId : itemKey.toString(), level.getGameTime());
+            // 统一攻击入口：打实体也算一次"攻击"，附着交给管线（方块/实体同一条路）
+            ElibAttackPipeline.dispatchOn(ElibAttackAction.of(player, element,
+                    ElibAttackTrigger.ENTITY, AttachmentSource.NORMAL_ATTACK, AttachmentProfile.WEAK, 3.0), living);
             return InteractionResultHolder.sidedSuccess(stack, false);
         }
 
@@ -135,7 +132,7 @@ public class ElementSwordItem extends SwordItem {
     }
 
     @Nullable
-    private GenshinElement element() {
+    public GenshinElement element() {
         return elementKey == null ? null : ModRegistries.ELEMENT_REGISTRY.get(elementKey);
     }
 }

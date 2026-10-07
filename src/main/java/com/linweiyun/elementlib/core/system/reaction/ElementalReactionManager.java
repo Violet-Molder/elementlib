@@ -2,9 +2,11 @@ package com.linweiyun.elementlib.core.system.reaction;
 
 import com.linweiyun.elementlib.api.ElementalReactionType;
 import com.linweiyun.elementlib.api.ReactionCategory;
+import com.linweiyun.elementlib.api.event.ElibElementReactionEvent;
+import com.linweiyun.elementlib.api.event.ElibEvents;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.GenshinElement;
-import com.linweiyun.elementlib.core.element.ModElements;
+import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentHelper;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
@@ -12,6 +14,8 @@ import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
 import com.linweiyun.elementlib.core.system.registry.ModRegistries;
 import com.linweiyun.elementlib.util.log.LogGroup;
 import com.linweiyun.elementlib.util.log.ModLog;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -41,7 +45,7 @@ public class ElementalReactionManager {
             if (inst.isFinished()) continue;
             if (!(inst instanceof ElementalAttachmentInstance ea)) continue;
             if (ea.getElement().isInstant()) continue;
-            if (ModElements.is(ea.getElement(), ModElements.FYSIKOS)) continue;
+            if (ElementRoles.is(ea.getElement(), ElementRoles.FYSIKOS)) continue;
 
             GenshinElement defenderMain = ea.getElement().getMainElement();
             if (defenderMain == null) continue;
@@ -97,6 +101,7 @@ public class ElementalReactionManager {
                     remainingAttackerQty,
                     context.attackerSource(),
                     context.attackerProfile(),
+                    context.sourceKey(),
                     context.attackerEntity(),
                     context.targetContainer(),
                     context.targetEntity(),
@@ -112,6 +117,7 @@ public class ElementalReactionManager {
                 LOGGER.error(" [Reaction] 宿主效果执行失败 reaction={}", cand.reaction.getReactionType(), t);
             }
             anyReactionOccurred = true;
+            publishReaction(context, roundContext, cand, result);
             remainingAttackerQty -= result.getConsumedAttacker();
             if (cand.reaction.showsIndicator(roundContext)) {
                 ElementalReactionType type = result.getReactionType();
@@ -135,6 +141,43 @@ public class ElementalReactionManager {
                 ReactionResult.builder(null).build();
     }
 
+    /** 广播 elementlib:element_reacted（每个成立的反应各一条）。 */
+    private static void publishReaction(ReactionContext context, ReactionContext roundContext,
+                                        Candidate cand, ReactionResult result) {
+        ElementalReactionType type = result.getReactionType();
+        if (type == null) {
+            return;
+        }
+        ElibElementReactionEvent event = new ElibElementReactionEvent(
+                levelOf(context), gameTimeOf(context), context.targetHost(), type,
+                type.getCategory(), context.attackerElement(), cand.defender.getElement(),
+                roundContext.attackerUnit(), context.attackerSource(), context.originId(),
+                context.sourceKey(), context.attackerEntity(), result);
+        ElibEvents.post(event);
+    }
+
+    /** 反应发生的服务端世界；宿主没带世界时退回目标实体自己的世界。 */
+    @Nullable
+    private static ServerLevel levelOf(ReactionContext context) {
+        ElementalHost host = context.targetHost();
+        if (host != null) {
+            if (host.level() != null) {
+                return host.level();
+            }
+            if (host.entity() != null && host.entity().level() instanceof ServerLevel serverLevel) {
+                return serverLevel;
+            }
+        }
+        return context.targetEntity() != null
+                && context.targetEntity().level() instanceof ServerLevel serverLevel
+                ? serverLevel : null;
+    }
+
+    private static long gameTimeOf(ReactionContext context) {
+        ServerLevel level = levelOf(context);
+        return level == null ? 0L : level.getGameTime();
+    }
+
     private static boolean shouldShowIndicator(@Nullable ElementalReactionType reactionType) {
         if (reactionType == null) return false;
         ReactionCategory category = reactionType.getCategory();
@@ -150,7 +193,7 @@ public class ElementalReactionManager {
             if (!(inst instanceof ElementalAttachmentInstance ea)) continue;
             GenshinElement defMain = ea.getElement().getMainElement();
             if (defMain == attackerMain) continue;
-            if (ModElements.is(ea.getElement(), ModElements.FYSIKOS)) continue;
+            if (ElementRoles.is(ea.getElement(), ElementRoles.FYSIKOS)) continue;
             if (ea.getElement().isInstant()) continue;
             result.add(ea);
         }

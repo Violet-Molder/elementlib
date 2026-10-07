@@ -85,6 +85,11 @@ public class ChunkBlockElements implements IPersistedSerializable {
         waterLevels.remove(pos.asLong());
     }
 
+    /** 只清容器、保留水位（模块迁移用）。 */
+    public void removeContainerOnly(BlockPos pos) {
+        containers.remove(pos.asLong());
+    }
+
     /** 清掉所有已经空掉的容器，返回清掉的个数。 */
     public int pruneEmpty() {
         int removed = 0;

@@ -15,6 +15,9 @@ crash-reports/
 *.log
 hs_err_pid*
 
+# ===== 本机一次性工具脚本：不进仓库、不追踪 =====
+tools/
+
 # ===== IDE 配置 =====
 /.idea/
 *.iml

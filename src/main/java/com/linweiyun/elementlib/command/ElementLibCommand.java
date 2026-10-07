@@ -209,7 +209,7 @@ public final class ElementLibCommand {
                 continue;
             }
             container.clear();
-            living.setData(ElementalAttachments.CONTAINER.get(), container);
+            ElementalAttachments.commit(living, container);
             done++;
         }
         final int count = done;

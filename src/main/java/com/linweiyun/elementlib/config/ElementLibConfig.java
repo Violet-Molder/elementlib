@@ -21,6 +21,9 @@ public final class ElementLibConfig {
     private static final ModConfigSpec.BooleanValue REGISTER_DEMO_REACTIONS;
     private static final ModConfigSpec.BooleanValue REGISTER_DEMO_ITEMS;
 
+    /** 接入方强制关闭示范内容（在 {@code ElementLib} 构造之前调用）。 */
+    private static volatile boolean demoSuppressed;
+
     private static final ModConfigSpec.DoubleValue DAMAGE_SUPERCONDUCT;
     private static final ModConfigSpec.DoubleValue DAMAGE_ELECTRO_CHARGED;
     private static final ModConfigSpec.DoubleValue DAMAGE_SWIRL;
@@ -71,16 +74,26 @@ public final class ElementLibConfig {
     private ElementLibConfig() {
     }
 
+    /**
+     * 强制关闭全部示范内容（元素 / 反应 / 反应类型 / 物品 / 实体），配置文件不再生效。
+     *
+     * <p>接入方注册自己的元素时调用，避免示范内容与本体内容同时存在。
+     */
+    public static void suppressDemoContent() {
+        demoSuppressed = true;
+        ElementLibEarlyFlags.resync(false, false, false, ElementLibEarlyFlags.auraIcon());
+    }
+
     public static boolean demoElementsEnabled() {
-        return ElementLibEarlyFlags.demoElements();
+        return !demoSuppressed && ElementLibEarlyFlags.demoElements();
     }
 
     public static boolean demoReactionsEnabled() {
-        return ElementLibEarlyFlags.demoReactions();
+        return !demoSuppressed && ElementLibEarlyFlags.demoReactions();
     }
 
     public static boolean demoItemsEnabled() {
-        return ElementLibEarlyFlags.demoItems();
+        return !demoSuppressed && ElementLibEarlyFlags.demoItems();
     }
 
     /** 附着图标总闸；配置尚未加载时返回默认 {@code true}，绝不抛异常。 */
@@ -114,6 +127,10 @@ public final class ElementLibConfig {
 
     /** 配置加载后把 Spec 的真实值同步给 {@link ElementLibEarlyFlags}。 */
     public static void syncEarlyFlags() {
+        if (demoSuppressed) {
+            ElementLibEarlyFlags.resync(false, false, false, ElementLibEarlyFlags.auraIcon());
+            return;
+        }
         ElementLibEarlyFlags.resync(
                 booleanValue(ELEMENTS_SPEC, REGISTER_DEMO_ELEMENTS, ElementLibEarlyFlags.demoElements()),
                 booleanValue(REACTIONS_SPEC, REGISTER_DEMO_REACTIONS, ElementLibEarlyFlags.demoReactions()),

@@ -3,6 +3,8 @@ plugins {
     // 版本在 settings.gradle 的 pluginManagement 里统一声明，这里不带 version。
     id 'net.neoforged.moddev'
     id 'idea'
+    id 'maven-publish'
+    id 'signing'
 }
 
 def lib_mod_id = mod_id
@@ -14,8 +16,12 @@ def lib_group_id = mod_group_id
 version = lib_mod_version
 group = lib_group_id
 
+// 方案 B：artifact 按 MC 版本拆分，26.2 与 1.21.1 各自独立，互不冲突。
+// 切换到 1.21.1 分支时改 gradle.properties 的 minecraft_version 即可自动跟随。
+def lib_artifact_id = "${mod_id}-neoforge-${minecraft_version}"
+
 base {
-    archivesName = lib_mod_id
+    archivesName = lib_artifact_id
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
@@ -88,9 +94,74 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+// 发布到 Maven Central 需要 javadoc jar；doclint 的“缺少 @param/@return”会让构建失败，这里关掉它。
+tasks.withType(Javadoc).configureEach {
+    options.encoding = 'UTF-8'
+    options.addBooleanOption('Xdoclint:none', true)
+}
+
 idea {
     module {
         downloadSources = true
         downloadJavadoc = true
     }
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = lib_artifact_id
+            version = lib_mod_version
+            from components.java
+            pom {
+                name = lib_mod_name
+                description = '元素体系独立库：元素注册、元素附着、元素反应、元素衰减（仅元素附着量序列）、计时计数器、环境元素附着。'
+                url = 'https://github.com/Violet-Molder/elementlib'
+                licenses {
+                    license {
+                        name = 'NC-Open 1.0 (Non-Commercial Open)'
+                        url = 'https://github.com/Violet-Molder/elementlib'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'linweiyun'
+                        name = 'Linweiyun'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/Violet-Molder/elementlib.git'
+                    developerConnection = 'scm:git:ssh://github.com/Violet-Molder/elementlib.git'
+                    url = 'https://github.com/Violet-Molder/elementlib'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            // Central Portal 的新账号用 OSSRH-staging 兼容端点（旧 s01.oss.sonatype.org 只给老 OSSRH 账号）
+            name = 'CentralStaging'
+            url = 'https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/'
+            credentials {
+                username = System.getenv('CENTRAL_USER') ?: ''
+                password = System.getenv('CENTRAL_PASSWORD') ?: ''
+            }
+        }
+    }
+}
+
+signing {
+    def keyFile = file(System.getenv('GPG_PRIVATE_KEY_FILE') ?: 'G:\\el_key.asc')
+    def secretKey = keyFile.exists() ? keyFile.text : ''
+    def password = System.getenv('GPG_PASSWORD') ?: ''
+    println "SIGN-DEBUG fileExists=${keyFile.exists()} secretLen=${secretKey.length()} pwLen=${password.length()}"
+    if (secretKey && password) {
+        useInMemoryPgpKeys(secretKey, password)
+    }
+    sign publishing.publications.mavenJava
 }

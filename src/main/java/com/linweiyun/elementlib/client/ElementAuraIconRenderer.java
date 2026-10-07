@@ -7,7 +7,7 @@ import com.linweiyun.elementlib.config.ElementLibConfig;
 import com.linweiyun.elementlib.core.attachment.ElementalAttachments;
 import com.linweiyun.elementlib.core.attachment.StatusContainer;
 import com.linweiyun.elementlib.core.element.GenshinElement;
-import com.linweiyun.elementlib.core.element.ModElements;
+import com.linweiyun.elementlib.api.ElementRoles;
 import com.linweiyun.elementlib.core.status.StatusInstance;
 import com.linweiyun.elementlib.core.system.about.ElementalAttachmentInstance;
 import com.linweiyun.elementlib.core.system.about.host.ElementalHost;
@@ -134,7 +134,8 @@ public final class ElementAuraIconRenderer {
             double distance = Math.sqrt(relX * relX + relY * relY + relZ * relZ);
             if (distance > MAX_DISTANCE) continue;
 
-            StatusContainer container = living.getData(ElementalAttachments.CONTAINER);
+            StatusContainer container = ElementalAttachments.peekContainer(living);
+            if (container == null) continue;
             if (!collectMainElements(container, living)) continue;
 
             if (debugFrames < 60 && (debugFrames % 20 == 0)) {
@@ -177,7 +178,7 @@ public final class ElementAuraIconRenderer {
             if (element == null) continue;
             // 效果载体（寒）不占图标：它伴随冰/冻存在，显示的应该是冰/冻本身
             if (element.isEffectCarrier()) continue;
-            if (ModElements.is(element, ModElements.FYSIKOS)) continue;
+            if (ElementRoles.is(element, ElementRoles.FYSIKOS)) continue;
 
             AuraIconContext ctx = new AuraIconContext(host, living, element, ea.getSource(), ea.getProfile());
             if (!AuraIconRules.shouldShow(ctx)) continue;
